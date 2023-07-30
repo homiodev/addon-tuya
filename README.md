@@ -17,10 +17,7 @@ You have registered an account on the [**Tuya Smart** or **Smart Life**](https:/
    <img src="https://airtake-public-data-1254153901.cos.ap-shanghai.myqcloud.com/content-platform/hestia/1622030427d285b460b84.png" height="350pt"/>
 
 5. Click **Create** to complete project creation.
-6. On the **Authorize API Products** page, subscribe to the API product **Device status notification**.
-   <img src="https://airtake-public-data-1254153901.cos.ap-shanghai.myqcloud.com/content-platform/hestia/1635307284f7e8a7381eb.png" height="500pt"/>
-   > **Note**: **Smart home** API products have been selected by default.
-7. Click **Authorize**.
+6. Click **Authorize**.
 
 ## Get authorization key
 
@@ -39,7 +36,8 @@ Link the device by your app account and copy the **Device ID** on the **Device L
    <img src="https://airtake-public-data-1254153901.cos.ap-shanghai.myqcloud.com/content-platform/hestia/16220137160a864a6099d.png" height="300pt"/>
 
 4. Click **Confirm login** on the **Tuya Smart** app or **Smart Life** app.
-5. Click the **All Devices** tab. You can see the devices linked with your **Tuya Smart** app or **Smart Life** app account.
+5. Copy **UID** on the **Link Tuya App Account** tab to **App uuid** app.
+6. Click the **All Devices** tab. You can see the devices linked with your **Tuya Smart** app or **Smart Life** app account.
 
 ## Correspondence of regions and availability zones
 
