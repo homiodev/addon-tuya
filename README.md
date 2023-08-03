@@ -1,3 +1,10 @@
+firewall blocking inbound UDP was my issue. I was surprised that opening the firewall was not on the front page. The following commands open the needed UDP ports on CentOS 7.
+
+sudo firewall-cmd --permanent --add-port=6666/udp
+sudo firewall-cmd --permanent --add-port=6667/udp
+sudo firewall-cmd --permanent --add-port=6668/tcp
+sudo firewall-cmd --reload
+
 This topic describes how to create a project on the [Tuya IoT Platform](https://iot.tuya.com/?_source=b9f0a0da0a32d911099e4862d12109dd), and connect to devices through the Tuya Smart app or the Smart Life app.
 
 ## Prerequisites
