@@ -1,26 +1,11 @@
 package org.homio.addon.tuya.internal.cloud;
 
+import static org.homio.api.util.CommonUtils.OBJECT_MAPPER;
+
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import lombok.SneakyThrows;
-import lombok.extern.log4j.Log4j2;
-import org.apache.commons.lang3.StringUtils;
-import org.homio.addon.tuya.TuyaDeviceEntity;
-import org.homio.addon.tuya.TuyaProjectEntity;
-import org.homio.addon.tuya.internal.cloud.dto.*;
-import org.homio.addon.tuya.internal.util.JoiningMapCollector;
-import org.homio.api.entity.DeviceBaseEntity;
-import org.homio.api.model.Status;
-import org.homio.api.util.CommonUtils;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.springframework.stereotype.Service;
-
-import javax.crypto.Mac;
-import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
-import javax.xml.bind.annotation.adapters.HexBinaryAdapter;
+import jakarta.xml.bind.annotation.adapters.HexBinaryAdapter;
 import java.lang.reflect.Type;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -31,9 +16,33 @@ import java.net.http.HttpResponse.BodyHandlers;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.MessageDigest;
-import java.util.*;
-
-import static org.homio.api.util.CommonUtils.OBJECT_MAPPER;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import javax.crypto.Mac;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
+import lombok.SneakyThrows;
+import lombok.extern.log4j.Log4j2;
+import org.apache.commons.lang3.StringUtils;
+import org.homio.addon.tuya.TuyaDeviceEntity;
+import org.homio.addon.tuya.TuyaProjectEntity;
+import org.homio.addon.tuya.internal.cloud.dto.CommandRequest;
+import org.homio.addon.tuya.internal.cloud.dto.DeviceSchema;
+import org.homio.addon.tuya.internal.cloud.dto.FactoryInformation;
+import org.homio.addon.tuya.internal.cloud.dto.ResultResponse;
+import org.homio.addon.tuya.internal.cloud.dto.TuyaDeviceDTO;
+import org.homio.addon.tuya.internal.cloud.dto.TuyaSubDeviceInfoDTO;
+import org.homio.addon.tuya.internal.cloud.dto.TuyaTokenDTO;
+import org.homio.addon.tuya.internal.util.JoiningMapCollector;
+import org.homio.api.entity.DeviceBaseEntity;
+import org.homio.api.model.Status;
+import org.homio.api.util.CommonUtils;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.springframework.stereotype.Service;
 
 /**
  * Implementation of the Tuya OpenApi specification

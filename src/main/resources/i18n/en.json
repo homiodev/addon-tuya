@@ -1,14 +1,57 @@
 {
-  "field": {
-    "controlKeepAliveTimeout": "Control keep alive timeout"
+  "WORKSPACE": {
+    "tuya": "Tuya"
   },
   "help": {
-    "controlKeepAliveTimeout": "Sets the time to wait between sending control connection keepalive messages when processing file upload or download."
+    "tuyaAppUID": "App UID. ",
+    "tuyaAccessID": "Access ID/Client ID from iot.tuya.com project overview page",
+    "tuyaAccessSecret": "Access Secret/Client Secret from iot.tuya.com project overview page",
+    "tuyaCountryCode": "Country code. See:  https://www.countrycodeguide.com, https://developer.tuya.com/en/docs/iot/oem-app-data-center-distributed?id=Kafi0ku9l07qb",
+    "tuyaDataCenter": "Tuya data center that use your SmartLife/TuyaSmart app. See: https://developer.tuya.com/en/docs/iot/Data_Center_Introduction?id=Kav2hlac2ppnw"
   },
-  "workspace": {
-    "ftp-storage": "Ftp"
+  "SELECTION": {
+    "TuyaDeviceEntity": "Tuya device"
   },
-  "selection": {
-    "FtpEntity": "FTP"
+  "SIDEBAR": {
+    "TuyaDeviceEntity": "Tuya device"
+  },
+  "tuyae": {
+    "switch_1": "Switch 1",
+    "countdown_1": "Switch 1 countdown",
+    "add_ele": "Increase power",
+    "cur_current": "Current",
+    "cur_power": "Power",
+    "cur_voltage": "Current voltage",
+    "test_bit": "Production test result bit",
+    "voltage_coe": "Voltage calibration coefficient",
+    "electric_coe": "Current calibration coefficient",
+    "power_coe": "Power calibration coefficient",
+    "electricity_coe": "Electricity calibration coefficient",
+    "fault": "Fault alarm",
+    "relay_status": "Power-on status setting",
+    "overcharge_switch": "Overcharge switch",
+    "light_mode": "Light mode",
+    "child_lock": "Child lock",
+    "cycle_time": "Cycle timer",
+    "random_time": "Random timer"
+  },
+  "TUYA": {
+    "SETTING": {
+      "st_ScanTuyaDevicesSetting": "Scan local tuya devices from cloud",
+      "st_TuyaEntityCompactModeSetting_false": "Switch to compact mode",
+      "st_TuyaEntityCompactModeSetting_true": "Switch to expand mode"
+    },
+    "CONNECT_ISSUE": "Unable connect to device. Options to fix: 1. Restart router. 2. Check device battery/connected to socket. 3. Check that ports 6666(UDP), 6667(UDP), 6668(tcp) not blocked by firewall",
+    "FETCH_DEVICE_INFO": "Fetch device info from tuya cloud",
+    "SCAN_DEVICES": "Scan local tuya devices from cloud",
+    "GET_DEVICE_LIST": "API: Get device list from cloud",
+    "GET_USER_INFO": "API: Get user info",
+    "DESCRIPTION_1004": "Incorrect 'accessId' or 'accessKey'",
+    "DESCRIPTION_1106": "<ul class=\"descr_list\"><li> Your app account is not linked with your cloud project: Link devices by using the Tuya Smart or Smart Life app with your cloud project on the <a target=\"_blank\" href=\"https://iot.tuya.com/cloud/?_source=681de17de8fab5904815ae7734942be6\">[Tuya IoT Platform]</a>. For more information, see <a target=\"_blank\" href=\"https://developer.tuya.com/en/docs/iot/Platform_Configuration_smarthome?id=Kamcgamwoevrx&_source=5e53a597a94394c1cf2c91a662d48339#title-3-Link%20devices%20by%20app%20account\">[Link devices by app account]</a>.</li><li> Incorrect username or password: Enter the correct account and password of the Tuya Smart or Smart Life app in the <b>Account</b> and <b>Password</b> fields. Note that the app account must be the one you used to link devices with your cloud project on the <a target=\"_blank\" href=\"https://iot.tuya.com/cloud/?_source=681de17de8fab5904815ae7734942be6\">[Tuya IoT Platform]</a>.</li><li>Incorrect countryCode: Enter the <a target=\"_blank\" href=\"https://countrycode.org\">[code of the country]</a> you select on logging in to the Tuya Smart or Smart Life app.</li></ul>",
+    "DESCRIPTION_1100": "'username' or 'appSchema' is empty",
+    "DESCRIPTION_2017": "Incorrect 'appSchema'",
+    "DESCRIPTION_2406": "<ul><li>Cloud project created before May 25, 2021: Your cloud project on the <a target=\"_blank\" href=\"https://iot.tuya.com/cloud/?_source=681de17de8fab5904815ae7734942be6\">[Tuya IoT Platform]</a> should be created after May 25, 2021. Otherwise, you need to create a new project. For more information, see <a target=\"_blank\" href=\"https://developer.tuya.com/en/docs/iot/migrate-from-an-older-version?id=Kamee9wtbd00b&_source=916fd766b6b05bd472341f20e65e8874#title-3-Operation%20on%20the%20Tuya%20IoT%20Platform\">[Operation on the Tuya IoT Platform]</a>. </li><li>Incorret Aavailable Zone：</li><ul><li>Select all the **Available Zone**, for how to edit available zone paramter please refer to <a target=\"_blank\" href=\"https://developer.tuya.com/en/docs/iot/manage-projects?id=Ka49p0n8vkzm6&_source=77b1aad74cfff559810b2f6b938197a6#title-3-Edit%20project%20details\">[Edit project details]</a>. </li><li>Select the correct  **Available Zone** according to <a target=\"_blank\" href=\"https://developer.tuya.com/en/docs/iot/Platform_Configuration_smarthome?id=Kamcgamwoevrx#title-4-Region%20%26%20Available%20Zone%20Correspondence\">[Region & Available Zone Correspondence]</a>. </li></ul></li></ul>",
+    "DESCRIPTION_28841105": "You have not authorized your cloud project to use the required APIs. Subscribe to the following required <a target=\"_blank\" href=\"https://developer.tuya.com/en/docs/iot/applying-for-api-group-permissions?id=Ka6vf012u6q76&_source=b356e917280db7c6b94e2d8bab3f9a8d#title-2-Subscribe%20to%20cloud%20products\">[API products]</a> and <a target=\"_blank\" href=\"https://developer.tuya.com/en/docs/iot/applying-for-api-group-permissions?id=Ka6vf012u6q76&_source=ca41dd21fcfba121836a891585cc94fc#title-3-Authorize%20projects%20to%20call%20the%20cloud%20product\">[authorize your project to use them]</a>.   <ul><li>Authorization</li><li>Smart Home Devices Management</li><li>Smart Home Family Management</li><li>Smart Home Scene Linkage</li><li>Smart Home Data Service</li><li>Device Status Notification</li></ul>",
+    "DESCRIPTION": "See documentation at <a target=\"_blank\" href=\"https://github.com/homiodev/addon-tuya\">https://github.com/homiodev/addon-tuya</a></li></ul>"
   }
 }

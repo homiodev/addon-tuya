@@ -120,6 +120,28 @@ public class TuyaDeviceEndpoint extends BaseDeviceEndpoint<TuyaDeviceEntity> {
     }
 
     @Override
+    public void writeValue(@NotNull State state) {
+        Object targetValue;
+        State targetState;
+        switch (tuyaEndpointType) {
+            case bool -> {
+                targetState = OnOffType.of(state.boolValue());
+                targetValue = targetState.boolValue();
+            }
+            case number, dimmer -> {
+                targetState = state instanceof DecimalType ? (DecimalType) state : new DecimalType(state.intValue());
+                targetValue = targetState.intValue();
+            }
+            default -> {
+                targetState = state;
+                targetValue = state.toString();
+            }
+        }
+        setValue(targetState, true);
+        getDevice().getService().send(Map.of(dp, targetValue));
+    }
+
+    @Override
     public @NotNull UIInputBuilder createActionBuilder() {
         UIInputBuilder uiInputBuilder = entityContext.ui().inputBuilder();
         TuyaDeviceEntity device = getDevice();
@@ -209,22 +231,22 @@ public class TuyaDeviceEndpoint extends BaseDeviceEndpoint<TuyaDeviceEntity> {
                         }).setDisabled(!device.getStatus().isOnline());
                     }
                     uiInputBuilder.addSlider(getEntityID(), value.floatValue(0), 0F, 100F,
-                            (entityContext, params) -> {
-                                Map<Integer, Object> commandRequest = new HashMap<>();
-                                int brightness = (int) Math.round(params.getInt("value") * schemaDp.getMax() / 100.0);
-                                setValue(new DecimalType(brightness), false);
-                                if (brightness >= schemaDp.getMin()) {
-                                    commandRequest.put(dp, value);
-                                }
-                                if (dp2 != null) {
-                                    commandRequest.put(dp2, brightness >= schemaDp.getMin());
-                                }
+                        (entityContext, params) -> {
+                            Map<Integer, Object> commandRequest = new HashMap<>();
+                            int brightness = (int) Math.round(params.getInt("value") * schemaDp.getMax() / 100.0);
+                            setValue(new DecimalType(brightness), false);
+                            if (brightness >= schemaDp.getMin()) {
+                                commandRequest.put(dp, value);
+                            }
+                            if (dp2 != null) {
+                                commandRequest.put(dp2, brightness >= schemaDp.getMin());
+                            }
                                 /* ChannelConfiguration workModeConfig = channelIdToConfiguration.get("work_mode");
                                 if (workModeConfig != null) {
                                     commandRequest.put(workModeConfig.dp, "white");
                                 }*/
-                                return device.getService().send(commandRequest);
-                            }).setDisabled(!device.getStatus().isOnline());
+                            return device.getService().send(commandRequest);
+                        }).setDisabled(!device.getStatus().isOnline());
                     return uiInputBuilder;
                 }
             }

@@ -12,8 +12,6 @@ import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.StringUtils;
 import org.homio.addon.tuya.internal.cloud.TuyaOpenAPI;
 import org.homio.addon.tuya.internal.local.UdpDiscoveryListener;
-import org.homio.addon.z2m.model.Z2MDeviceEntity;
-import org.homio.addon.z2m.setting.ZigBeeEntityCompactModeSetting;
 import org.homio.api.AddonEntrypoint;
 import org.homio.api.EntityContext;
 import org.homio.hquery.hardware.network.NetworkHardwareRepository;
@@ -30,10 +28,6 @@ public class TuyaEntrypoint implements AddonEntrypoint {
     public static final @NotNull UdpDiscoveryListener udpDiscoveryListener = new UdpDiscoveryListener(eventLoopGroup);
 
     private final EntityContext entityContext;
-
-    public URL getAddonImageURL() {
-        return getResource("images/tuya.png");
-    }
 
     @Override
     public void init() {
@@ -82,7 +76,6 @@ public class TuyaEntrypoint implements AddonEntrypoint {
                 }
             }
             entityContext.save(entity, false);
-            entity.setJsonData("dis_del", true);
         }
         if (entity.getCountryCode() == null) {
             scheduleUpdateTuyaProjectOnInternetUp(entityContext);

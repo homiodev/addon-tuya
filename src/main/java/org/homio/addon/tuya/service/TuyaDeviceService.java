@@ -183,7 +183,7 @@ public class TuyaDeviceService extends ServiceInstance<TuyaDeviceEntity> impleme
         return "${%s} [%s]".formatted(entity.getTitle(), entity.getIeeeAddress());
     }
 
-    private String getDeviceFullName() {
+    public String getDeviceFullName() {
         return "%s(%s) [${%s}]".formatted(
                 entity.getTitle(),
                 entity.getIeeeAddress(),

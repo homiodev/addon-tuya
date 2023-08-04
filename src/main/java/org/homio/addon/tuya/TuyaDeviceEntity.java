@@ -79,6 +79,11 @@ public final class TuyaDeviceEntity extends DeviceEndpointsBaseEntity
     }
 
     @Override
+    public @NotNull String getDeviceFullName() {
+        return getService().getDeviceFullName();
+    }
+
+    @Override
     public @NotNull Map<String, ? extends DeviceEndpoint> getDeviceEndpoints() {
         return optService().map(TuyaDeviceService::getEndpoints).orElse(Map.of());
     }

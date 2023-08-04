@@ -1,7 +1,5 @@
 package org.homio.addon.tuya.internal.util;
 
-import lombok.RequiredArgsConstructor;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -11,6 +9,7 @@ import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
+import lombok.RequiredArgsConstructor;
 
 /**
  * Allows joining all entries of a {@link java.util.stream.Stream<Map.Entry>} with or
@@ -50,7 +49,7 @@ public class JoiningMapCollector implements Collector<Map.Entry<String, String>,
     }
 
     /**
-     * Create a collector for joining all @link Map.Entry} with the given delimiters
+     * Create a collector for joining all with the given delimiters
      *
      * @param valueDelimiter the delimiter used to join key and value of each entry
      * @param entryDelimiter the delimiter used to join entries
@@ -58,14 +57,5 @@ public class JoiningMapCollector implements Collector<Map.Entry<String, String>,
      */
     public static JoiningMapCollector joining(String valueDelimiter, String entryDelimiter) {
         return new JoiningMapCollector(valueDelimiter, entryDelimiter);
-    }
-
-    /**
-     * Create a collector for joining all {@link Map.Entry} without delimiters at all
-     *
-     * @return the joined {@link java.util.stream.Stream<Map.Entry>} as {@link String}
-     */
-    public static JoiningMapCollector joining() {
-        return new JoiningMapCollector("", "");
     }
 }
