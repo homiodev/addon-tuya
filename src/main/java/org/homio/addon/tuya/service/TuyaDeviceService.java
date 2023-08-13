@@ -4,6 +4,7 @@ import static java.util.Objects.requireNonNull;
 import static org.apache.commons.lang3.ObjectUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.defaultIfEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+import static org.homio.addon.tuya.TuyaEntrypoint.TUYA_COLOR;
 import static org.homio.addon.tuya.TuyaEntrypoint.eventLoopGroup;
 import static org.homio.addon.tuya.TuyaEntrypoint.udpDiscoveryListener;
 import static org.homio.addon.tuya.service.TuyaDiscoveryService.updateTuyaDeviceEntity;
@@ -28,6 +29,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.homio.addon.tuya.TuyaDeviceEndpoint;
 import org.homio.addon.tuya.TuyaDeviceEndpoint.TuyaEndpointType;
 import org.homio.addon.tuya.TuyaDeviceEntity;
+import org.homio.addon.tuya.TuyaProjectEntity;
 import org.homio.addon.tuya.internal.cloud.TuyaOpenAPI;
 import org.homio.addon.tuya.internal.cloud.dto.TuyaDeviceDTO;
 import org.homio.addon.tuya.internal.local.DeviceInfoSubscriber;
@@ -72,8 +74,8 @@ public class TuyaDeviceService extends ServiceInstance<TuyaDeviceEntity> impleme
     private @NotNull Map<String, SchemaDp> schemaDps = Map.of();
     private List<ConfigDeviceDefinition> models;
 
-    public TuyaDeviceService(EntityContext entityContext) {
-        super(entityContext);
+    public TuyaDeviceService(EntityContext entityContext, TuyaDeviceEntity entity) {
+        super(entityContext, entity, true);
     }
 
     @Override
@@ -97,7 +99,7 @@ public class TuyaDeviceService extends ServiceInstance<TuyaDeviceEntity> impleme
     }
 
     @Override
-    public void destroy() throws Exception {
+    public void destroy() {
         closeAll();
         udpDiscoveryListener.unregisterListener(entity.getIeeeAddress());
     }
@@ -162,32 +164,27 @@ public class TuyaDeviceService extends ServiceInstance<TuyaDeviceEntity> impleme
         }
     }
 
+    public @NotNull List<ConfigDeviceDefinition> findDevices() {
+        if (models == null && !schemaDps.isEmpty()) {
+            Set<String> endpoints = schemaDps.values().stream().map(SchemaDp::getCode).collect(Collectors.toSet());
+            models = CONFIG_DEVICE_SERVICE.findDeviceDefinitionModels(entity.getModel(), endpoints);
+        }
+        return models == null ? List.of() : models;
+    }
+
     private void setEntityStatus(@NotNull Status status, @Nullable String message) {
         if (entity.getStatus() != status || !Objects.equals(entity.getStatusMessage(), message)) {
             entity.setStatus(status, message);
             getEndpoints().get(ENDPOINT_DEVICE_STATUS).setValue(new StringType(status.toString()), true);
+            TuyaProjectEntity projectEntity = TuyaOpenAPI.getProjectEntity();
+            if (projectEntity != null) {
+                projectEntity.getService().updateNotificationBlock();
+            }
         }
-    }
-
-    private void createOrUpdateDeviceGroup() {
-        Icon icon = new Icon(
-            CONFIG_DEVICE_SERVICE.getDeviceIcon(findDevices(), "fas fa-server"),
-            CONFIG_DEVICE_SERVICE.getDeviceIconColor(findDevices(), UI.Color.random())
-        );
-        entityContext.var().createGroup("tuya", "Tuya", true, new Icon("fas fa-fish-fins", "#D68C38"));
-        entityContext.var().createGroup("tuya", requireNonNull(entity.getIeeeAddress()), getDeviceFullName(), true,
-            icon, getGroupDescription());
     }
 
     public String getGroupDescription() {
         return "${%s} [%s]".formatted(entity.getTitle(), entity.getIeeeAddress());
-    }
-
-    public String getDeviceFullName() {
-        return "%s(%s) [${%s}]".formatted(
-                entity.getTitle(),
-                entity.getIeeeAddress(),
-                defaultIfEmpty(entity.getPlace(), "place_not_set"));
     }
 
     private void fetchDeviceInfo() {
@@ -286,12 +283,14 @@ public class TuyaDeviceService extends ServiceInstance<TuyaDeviceEntity> impleme
         return tuyaDeviceCommunicator.map(communicator -> communicator.sendCommand(commands)).orElse(null);
     }
 
-    public @NotNull List<ConfigDeviceDefinition> findDevices() {
-        if (this.models == null && !schemaDps.isEmpty()) {
-            Set<String> endpoints = schemaDps.values().stream().map(SchemaDp::getCode).collect(Collectors.toSet());
-            return CONFIG_DEVICE_SERVICE.findDeviceDefinitionModels(entity.getModel(), endpoints);
-        }
-        return List.of();
+    private void createOrUpdateDeviceGroup() {
+        Icon icon = new Icon(
+            CONFIG_DEVICE_SERVICE.getDeviceIcon(findDevices(), "fas fa-server"),
+            CONFIG_DEVICE_SERVICE.getDeviceIconColor(findDevices(), UI.Color.random())
+        );
+        entityContext.var().createGroup("tuya", "Tuya", true, new Icon("fas fa-fish-fins", TUYA_COLOR));
+        entityContext.var().createGroup("tuya", requireNonNull(entity.getIeeeAddress()), entity.getDeviceFullName(), true,
+            icon, getGroupDescription());
     }
 
     private void addDeviceStatusEndpoint() {

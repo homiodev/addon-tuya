@@ -46,9 +46,9 @@ import org.jetbrains.annotations.Nullable;
 @Entity
 @Accessors(chain = true)
 @UISidebarChildren(icon = "fas fa-diagram-project", color = "#0088CC", allowCreateItem = false)
-public final class TuyaProjectEntity extends MicroControllerBaseEntity<TuyaProjectEntity>
+public final class TuyaProjectEntity extends MicroControllerBaseEntity
     implements EntityService<TuyaProjectService, TuyaProjectEntity>,
-    HasStatusAndMsg<TuyaProjectEntity>, HasEntityLog {
+    HasStatusAndMsg, HasEntityLog {
 
     @UIField(order = 9999, disableEdit = true, hideInEdit = true)
     @UIFieldInlineEntities(bg = "#27FF000D")
@@ -61,13 +61,12 @@ public final class TuyaProjectEntity extends MicroControllerBaseEntity<TuyaProje
     }
 
     @Override
-    public @NotNull TuyaProjectEntity setStatus(@Nullable Status status, @Nullable String msg) {
+    public void setStatus(@Nullable Status status, @Nullable String msg) {
         boolean reloadItem = !getStatus().equals(status) || (status == Status.ERROR && !Objects.equals(getStatusMessage(), msg));
         super.setStatus(status, msg);
         if (reloadItem) {
             getEntityContext().ui().updateItem(this);
         }
-        return this;
     }
 
     @UIField(order = 1, hideInEdit = true, hideOnEmpty = true, fullWidth = true, bg = "#334842C2", type = UIFieldType.HTML)
@@ -159,7 +158,7 @@ public final class TuyaProjectEntity extends MicroControllerBaseEntity<TuyaProje
 
     @Override
     public @NotNull TuyaProjectService createService(@NotNull EntityContext entityContext) {
-        return new TuyaProjectService(entityContext);
+        return new TuyaProjectService(entityContext, this);
     }
 
     @Override

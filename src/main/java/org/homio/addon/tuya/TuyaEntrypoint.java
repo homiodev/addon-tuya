@@ -5,7 +5,6 @@ import static org.homio.api.util.Constants.PRIMARY_DEVICE;
 import com.fasterxml.jackson.databind.JsonNode;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
-import java.net.URL;
 import java.time.Duration;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -22,6 +21,9 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class TuyaEntrypoint implements AddonEntrypoint {
+
+    public static final String TUYA_ICON = "fac fa-bitfocus";
+    public static final String TUYA_COLOR = "#D68C38";
 
     public static final EventLoopGroup eventLoopGroup = new NioEventLoopGroup();
 
@@ -66,9 +68,9 @@ public class TuyaEntrypoint implements AddonEntrypoint {
     public @NotNull TuyaProjectEntity ensureEntityExists(EntityContext entityContext) {
         TuyaProjectEntity entity = entityContext.getEntity(TuyaProjectEntity.class, PRIMARY_DEVICE);
         if (entity == null) {
-            entity = new TuyaProjectEntity()
-                .setEntityID(PRIMARY_DEVICE)
-                .setName("Tuya primary project");
+            entity = new TuyaProjectEntity();
+            entity.setEntityID(PRIMARY_DEVICE);
+            entity.setName("Tuya primary project");
             if (entityContext.event().isInternetUp()) {
                 Integer countryCode = getCountryCode(entityContext);
                 if (countryCode != null) {

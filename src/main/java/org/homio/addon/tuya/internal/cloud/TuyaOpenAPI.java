@@ -24,6 +24,8 @@ import java.util.Objects;
 import javax.crypto.Mac;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.SneakyThrows;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.StringUtils;
@@ -37,7 +39,7 @@ import org.homio.addon.tuya.internal.cloud.dto.TuyaDeviceDTO;
 import org.homio.addon.tuya.internal.cloud.dto.TuyaSubDeviceInfoDTO;
 import org.homio.addon.tuya.internal.cloud.dto.TuyaTokenDTO;
 import org.homio.addon.tuya.internal.util.JoiningMapCollector;
-import org.homio.api.entity.DeviceBaseEntity;
+import org.homio.api.entity.device.DeviceBaseEntity;
 import org.homio.api.model.Status;
 import org.homio.api.util.CommonUtils;
 import org.jetbrains.annotations.NotNull;
@@ -55,20 +57,18 @@ public class TuyaOpenAPI {
     private static final String NONE_STRING = "";
     private static final String EMPTY_HASH = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 
-    private static TuyaProjectEntity projectEntity;
+    @Getter
+    @Setter
+    private static @Nullable TuyaProjectEntity projectEntity;
 
     private @NotNull TuyaTokenDTO token = new TuyaTokenDTO();
-
-    public static void setProjectEntity(@NotNull TuyaProjectEntity projectEntity) {
-        TuyaOpenAPI.projectEntity = projectEntity;
-    }
 
     public boolean isConnected() {
         return !token.accessToken.isEmpty() && System.currentTimeMillis() < token.expireTimestamp;
     }
 
     public synchronized void login() {
-        assertApiReady();
+        TuyaProjectEntity projectEntity = assertApiReady();
         if (isConnected()) {
             return;
         }
@@ -97,10 +97,11 @@ public class TuyaOpenAPI {
         }
     }
 
-    private static void assertApiReady() {
-        if (projectEntity == null) {
-            throw new TuyaApiNotReadyException();
-        }
+    @SneakyThrows
+    public Object getUserInfo() {
+        TuyaProjectEntity projectEntity = assertApiReady();
+        String response = request("/v1.0/users/" + projectEntity.getAppUID() + "/infos", Map.of(), null);
+        return OBJECT_MAPPER.readValue(response, ObjectNode.class);
     }
 
     public TuyaDeviceDTO getDevice(String deviceID, TuyaDeviceEntity entity) {
@@ -113,10 +114,14 @@ public class TuyaOpenAPI {
         return processResponse(response, TypeToken.getParameterized(List.class, TuyaSubDeviceInfoDTO.class).getType(), entity);
     }
 
-    @SneakyThrows
-    public Object getUserInfo() {
-        String response = request("/v1.0/users/" + projectEntity.getAppUID() + "/infos", Map.of(), null);
-        return OBJECT_MAPPER.readValue(response, ObjectNode.class);
+    public List<TuyaDeviceDTO> getDeviceList(int page) {
+        Map<String, String> params = Map.of(
+            "from", "",
+            "page_no", String.valueOf(page),
+            "page_size", "100");
+        TuyaProjectEntity projectEntity = assertApiReady();
+        String response = request("/v1.0/users/" + projectEntity.getAppUID() + "/devices", params, null);
+        return processResponse(response, TypeToken.getParameterized(List.class, TuyaDeviceDTO.class).getType(), projectEntity);
     }
 
     public List<FactoryInformation> getFactoryInformation(List<String> deviceIds, TuyaDeviceEntity entity) {
@@ -125,13 +130,12 @@ public class TuyaOpenAPI {
         return processResponse(response, TypeToken.getParameterized(List.class, FactoryInformation.class).getType(), entity);
     }
 
-    public List<TuyaDeviceDTO> getDeviceList(int page) {
-        Map<String, String> params = Map.of(
-                "from", "",
-                "page_no", String.valueOf(page),
-                "page_size", "100");
-        String response = request("/v1.0/users/" + projectEntity.getAppUID() + "/devices", params, null);
-        return processResponse(response, TypeToken.getParameterized(List.class, TuyaDeviceDTO.class).getType(), projectEntity);
+    private static @NotNull TuyaProjectEntity assertApiReady() {
+        TuyaProjectEntity entity = projectEntity;
+        if (entity == null) {
+            throw new TuyaApiNotReadyException();
+        }
+        return entity;
     }
 
     public DeviceSchema getDeviceSchema(String deviceId, TuyaDeviceEntity entity) {
@@ -164,6 +168,7 @@ public class TuyaOpenAPI {
 
     @SneakyThrows
     private String request(String path, Map<String, String> params, @Nullable String body) {
+        TuyaProjectEntity projectEntity = assertApiReady();
         if(!path.contains("/token")) {
             login();
         }

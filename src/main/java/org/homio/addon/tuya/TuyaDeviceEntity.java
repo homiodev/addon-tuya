@@ -3,6 +3,8 @@ package org.homio.addon.tuya;
 import static org.apache.commons.lang3.StringUtils.defaultIfEmpty;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+import static org.homio.addon.tuya.TuyaEntrypoint.TUYA_COLOR;
+import static org.homio.addon.tuya.TuyaEntrypoint.TUYA_ICON;
 import static org.homio.addon.tuya.internal.cloud.TuyaOpenAPI.gson;
 import static org.homio.addon.tuya.service.TuyaDeviceService.CONFIG_DEVICE_SERVICE;
 import static org.homio.api.ui.field.UIFieldType.HTML;
@@ -28,7 +30,8 @@ import org.homio.addon.tuya.internal.local.ProtocolVersion;
 import org.homio.addon.tuya.internal.util.SchemaDp;
 import org.homio.addon.tuya.service.TuyaDeviceService;
 import org.homio.api.EntityContext;
-import org.homio.api.entity.DeviceEndpointsBaseEntity;
+import org.homio.api.entity.device.DeviceBaseEntity;
+import org.homio.api.entity.device.DeviceEndpointsBehaviourContract;
 import org.homio.api.entity.log.HasEntityLog;
 import org.homio.api.model.ActionResponseModel;
 import org.homio.api.model.device.ConfigDeviceDefinition;
@@ -54,9 +57,9 @@ import org.jetbrains.annotations.Nullable;
 @Setter
 @Entity
 @Accessors(chain = true)
-@UISidebarMenu(icon = "fac fa-bitfocus",
+@UISidebarMenu(icon = TUYA_ICON,
                order = 150,
-               bg = "#D68C38",
+               bg = TUYA_COLOR,
                parent = TopSidebarMenu.DEVICES,
                allowCreateNewItems = true,
                overridePath = "tuya",
@@ -67,8 +70,10 @@ import org.jetbrains.annotations.Nullable;
                    "status~#7EAD28:fas fa-turn-up:fas fa-turn-down",
                    "place~#9C27B0:fas fa-location-dot:fas fa-location-dot fa-rotate-180"
                })
-public final class TuyaDeviceEntity extends DeviceEndpointsBaseEntity
-    implements EntityService<TuyaDeviceService, DeviceEndpointsBaseEntity>, HasEntityLog {
+public final class TuyaDeviceEntity extends DeviceBaseEntity
+    implements
+    DeviceEndpointsBehaviourContract,
+    EntityService<TuyaDeviceService, TuyaDeviceEntity>, HasEntityLog {
 
     private static final Map<String, Map<String, SchemaDp>> SCHEMAS = readSchemaFromFile();
 
@@ -80,7 +85,10 @@ public final class TuyaDeviceEntity extends DeviceEndpointsBaseEntity
 
     @Override
     public @NotNull String getDeviceFullName() {
-        return getService().getDeviceFullName();
+        return "%s(%s) [${%s}]".formatted(
+            getTitle(),
+            getIeeeAddress(),
+            defaultIfEmpty(getPlace(), "W.ERROR.PLACE_NOT_SET"));
     }
 
     @Override
@@ -345,7 +353,7 @@ public final class TuyaDeviceEntity extends DeviceEndpointsBaseEntity
 
     @Override
     public @NotNull TuyaDeviceService createService(@NotNull EntityContext entityContext) {
-        return new TuyaDeviceService(entityContext);
+        return new TuyaDeviceService(entityContext, this);
     }
 
     @SneakyThrows

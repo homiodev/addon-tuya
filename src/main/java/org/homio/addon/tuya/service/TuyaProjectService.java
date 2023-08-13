@@ -1,11 +1,16 @@
 package org.homio.addon.tuya.service;
 
+import static org.homio.addon.tuya.TuyaEntrypoint.TUYA_COLOR;
+import static org.homio.addon.tuya.TuyaEntrypoint.TUYA_ICON;
+
 import java.time.Duration;
 import lombok.Getter;
 import lombok.SneakyThrows;
+import org.homio.addon.tuya.TuyaDeviceEntity;
 import org.homio.addon.tuya.TuyaProjectEntity;
 import org.homio.addon.tuya.internal.cloud.TuyaOpenAPI;
 import org.homio.api.EntityContext;
+import org.homio.api.model.Icon;
 import org.homio.api.model.Status;
 import org.homio.api.service.EntityService.ServiceInstance;
 import org.jetbrains.annotations.NotNull;
@@ -16,8 +21,8 @@ public class TuyaProjectService extends ServiceInstance<TuyaProjectEntity> {
     private final TuyaOpenAPI api;
 
     @SneakyThrows
-    public TuyaProjectService(@NotNull EntityContext entityContext) {
-        super(entityContext);
+    public TuyaProjectService(@NotNull EntityContext entityContext, TuyaProjectEntity entity) {
+        super(entityContext, entity, true);
         this.api = entityContext.getBean(TuyaOpenAPI.class);
     }
 
@@ -33,6 +38,8 @@ public class TuyaProjectService extends ServiceInstance<TuyaProjectEntity> {
             scheduleInitialize();
         } catch (Exception ex) {
             entity.setStatusError(ex);
+        } finally {
+            updateNotificationBlock();
         }
     }
 
@@ -62,6 +69,14 @@ public class TuyaProjectService extends ServiceInstance<TuyaProjectEntity> {
     }
 
     @Override
-    public void destroy() throws Exception {
+    public void destroy() {
+        updateNotificationBlock();
+    }
+
+    public void updateNotificationBlock() {
+        entityContext.ui().addNotificationBlock(entityID, "Tuya", new Icon(TUYA_ICON, TUYA_COLOR), builder -> {
+            builder.setStatus(entity.getStatus()).linkToEntity(entity);
+            builder.setDevices(entityContext.findAll(TuyaDeviceEntity.class));
+        });
     }
 }
