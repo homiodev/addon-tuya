@@ -15,7 +15,7 @@
   "SIDEBAR": {
     "TuyaDeviceEntity": "Tuya device"
   },
-  "tuyae": {
+  "TUYA_N": {
     "switch_1": "Switch 1",
     "countdown_1": "Switch 1 countdown",
     "add_ele": "Increase power",

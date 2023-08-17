@@ -8,7 +8,7 @@ import static org.homio.addon.tuya.TuyaEntrypoint.TUYA_ICON;
 import static org.homio.addon.tuya.internal.cloud.TuyaOpenAPI.gson;
 import static org.homio.addon.tuya.service.TuyaDeviceService.CONFIG_DEVICE_SERVICE;
 import static org.homio.api.ui.field.UIFieldType.HTML;
-import static org.homio.api.util.CommonUtils.OBJECT_MAPPER;
+import static org.homio.api.util.JsonUtils.OBJECT_MAPPER;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.type.TypeReference;

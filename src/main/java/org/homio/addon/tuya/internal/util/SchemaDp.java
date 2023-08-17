@@ -1,20 +1,20 @@
 package org.homio.addon.tuya.internal.util;
 
-import static org.homio.api.util.CommonUtils.OBJECT_MAPPER;
+import static org.homio.api.util.JsonUtils.OBJECT_MAPPER;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.io.StringReader;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
 import lombok.experimental.Accessors;
-import org.homio.addon.tuya.TuyaDeviceEndpoint.TuyaEndpointType;
 import org.homio.addon.tuya.internal.cloud.dto.DeviceSchema;
+import org.homio.api.model.endpoint.DeviceEndpoint.EndpointType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -26,14 +26,14 @@ import org.jetbrains.annotations.Nullable;
 @Accessors(chain = true)
 public class SchemaDp {
 
-    private static final Map<String, TuyaEndpointType> REMOTE_LOCAL_TYPE_MAP = Map.of(
-        "Boolean", TuyaEndpointType.bool,
-        "Enum", TuyaEndpointType.select,
-        "Integer", TuyaEndpointType.number,
-        "Json", TuyaEndpointType.string);
+    private static final Map<String, EndpointType> REMOTE_LOCAL_TYPE_MAP = Map.of(
+        "Boolean", EndpointType.bool,
+        "Enum", EndpointType.select,
+        "Integer", EndpointType.number,
+        "Json", EndpointType.string);
 
     public int dp;
-    private @NotNull TuyaEndpointType type = TuyaEndpointType.string;
+    private @NotNull EndpointType type = EndpointType.string;
     private @NotNull String code = "";
 
     private @Nullable Integer dp2;
@@ -42,7 +42,7 @@ public class SchemaDp {
     private @NotNull ObjectNode meta = OBJECT_MAPPER.createObjectNode();
 
     @JsonIgnore
-    private List<String> range;
+    private Set<String> range;
     @JsonIgnore
     private Float min;
     @JsonIgnore
@@ -77,9 +77,9 @@ public class SchemaDp {
     }
 
     @JsonIgnore
-    public List<String> getRange() {
+    public Set<String> getRange() {
         if (range == null) {
-            range = new ArrayList<>();
+            range = new LinkedHashSet<>();
             if (meta.has("range")) {
                 for (JsonNode jsonNode : meta.get("range")) {
                     range.add(jsonNode.asText());
@@ -94,7 +94,7 @@ public class SchemaDp {
         SchemaDp schemaDp = new SchemaDp();
         schemaDp.code = description.code.replace("_v2", "");
         schemaDp.dp = description.dp_id;
-        schemaDp.type = REMOTE_LOCAL_TYPE_MAP.getOrDefault(description.type, TuyaEndpointType.string);
+        schemaDp.type = REMOTE_LOCAL_TYPE_MAP.getOrDefault(description.type, EndpointType.string);
         schemaDp.meta = OBJECT_MAPPER.readValue(description.values, ObjectNode.class);
         return schemaDp;
     }

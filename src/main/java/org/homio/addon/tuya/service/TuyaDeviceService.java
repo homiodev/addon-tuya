@@ -2,12 +2,17 @@ package org.homio.addon.tuya.service;
 
 import static java.util.Objects.requireNonNull;
 import static org.apache.commons.lang3.ObjectUtils.isEmpty;
-import static org.apache.commons.lang3.StringUtils.defaultIfEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.homio.addon.tuya.TuyaEntrypoint.TUYA_COLOR;
 import static org.homio.addon.tuya.TuyaEntrypoint.eventLoopGroup;
 import static org.homio.addon.tuya.TuyaEntrypoint.udpDiscoveryListener;
 import static org.homio.addon.tuya.service.TuyaDiscoveryService.updateTuyaDeviceEntity;
+import static org.homio.api.model.Status.ERROR;
+import static org.homio.api.model.Status.INITIALIZE;
+import static org.homio.api.model.Status.OFFLINE;
+import static org.homio.api.model.Status.ONLINE;
+import static org.homio.api.model.Status.UNKNOWN;
+import static org.homio.api.model.Status.WAITING;
 import static org.homio.api.model.endpoint.DeviceEndpoint.ENDPOINT_DEVICE_STATUS;
 import static org.homio.api.model.endpoint.DeviceEndpoint.ENDPOINT_LAST_SEEN;
 
@@ -21,13 +26,11 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.StringUtils;
 import org.homio.addon.tuya.TuyaDeviceEndpoint;
-import org.homio.addon.tuya.TuyaDeviceEndpoint.TuyaEndpointType;
 import org.homio.addon.tuya.TuyaDeviceEntity;
 import org.homio.addon.tuya.TuyaProjectEntity;
 import org.homio.addon.tuya.internal.cloud.TuyaOpenAPI;
@@ -46,6 +49,7 @@ import org.homio.api.model.Status;
 import org.homio.api.model.device.ConfigDeviceDefinition;
 import org.homio.api.model.device.ConfigDeviceDefinitionService;
 import org.homio.api.model.device.ConfigDeviceEndpoint;
+import org.homio.api.model.endpoint.DeviceEndpoint.EndpointType;
 import org.homio.api.service.EntityService.ServiceInstance;
 import org.homio.api.state.DecimalType;
 import org.homio.api.state.StringType;
@@ -125,7 +129,7 @@ public class TuyaDeviceService extends ServiceInstance<TuyaDeviceEntity> impleme
                 addDeviceStatusEndpoint();
             }
             if (StringUtils.isEmpty(entity.getIeeeAddress())) {
-                setEntityStatus(Status.ERROR, "Empty device id");
+                setEntityStatus(ERROR, "Empty device id");
                 return;
             }
             if (isRequireFetchDeviceInfoFromCloud()) {
@@ -147,7 +151,7 @@ public class TuyaDeviceService extends ServiceInstance<TuyaDeviceEntity> impleme
                     }
                     addLastSeenEndpoint();
                 } else {
-                    setEntityStatus(Status.OFFLINE, "No endpoints found");
+                    setEntityStatus(OFFLINE, "No endpoints found");
                     return;
                 }
             }
@@ -155,11 +159,11 @@ public class TuyaDeviceService extends ServiceInstance<TuyaDeviceEntity> impleme
             if (!entity.getIp().isBlank()) {
                 deviceInfoChanged(new DeviceInfo(entity.getIp(), entity.getProtocolVersion().getVersionString()));
             } else {
-                setEntityStatus(Status.WAITING, "Waiting for IP address");
+                setEntityStatus(WAITING, "Waiting for IP address");
                 udpDiscoveryListener.registerListener(entity.getIeeeAddress(), this);
             }
         } catch (Exception ex) {
-            setEntityStatus(Status.ERROR, CommonUtils.getErrorMessage(ex));
+            setEntityStatus(ERROR, CommonUtils.getErrorMessage(ex));
             log.error("[{}]: Error during initialize tuya device: {}", entity.getEntityID(), CommonUtils.getErrorMessage(ex));
         }
     }
@@ -175,7 +179,7 @@ public class TuyaDeviceService extends ServiceInstance<TuyaDeviceEntity> impleme
     private void setEntityStatus(@NotNull Status status, @Nullable String message) {
         if (entity.getStatus() != status || !Objects.equals(entity.getStatusMessage(), message)) {
             entity.setStatus(status, message);
-            getEndpoints().get(ENDPOINT_DEVICE_STATUS).setValue(new StringType(status.toString()), true);
+            getEndpoints().get(ENDPOINT_DEVICE_STATUS).setValue(new StringType(toString()), true);
             TuyaProjectEntity projectEntity = TuyaOpenAPI.getProjectEntity();
             if (projectEntity != null) {
                 projectEntity.getService().updateNotificationBlock();
@@ -184,15 +188,18 @@ public class TuyaDeviceService extends ServiceInstance<TuyaDeviceEntity> impleme
     }
 
     public String getGroupDescription() {
-        return "${%s} [%s]".formatted(entity.getTitle(), entity.getIeeeAddress());
+        if (StringUtils.isEmpty(entity.getName()) || entity.getName().equals(entity.getIeeeAddress())) {
+            return entity.getIeeeAddress();
+        }
+        return "${%s} [%s]".formatted(entity.getName(), entity.getIeeeAddress());
     }
 
     private void fetchDeviceInfo() {
-        setEntityStatus(Status.INITIALIZE, null);
+        setEntityStatus(INITIALIZE, null);
         // delay to able Tuya api get project
         entityContext.bgp().builder("tuya-init-" + entity.getIeeeAddress())
                      .delay(Duration.ofSeconds(1))
-                     .onError(e -> setEntityStatus(Status.ERROR, CommonUtils.getErrorMessage(e)))
+                     .onError(e -> setEntityStatus(ERROR, CommonUtils.getErrorMessage(e)))
                      .execute(this::tryFetchDeviceInfo);
     }
 
@@ -207,7 +214,7 @@ public class TuyaDeviceService extends ServiceInstance<TuyaDeviceEntity> impleme
 
     @Override
     public void onDisconnected(@NotNull String message) {
-        setEntityStatus(Status.ERROR, message);
+        setEntityStatus(ERROR, message);
         if (EntityContextBGP.cancel(pollingJob)) {
             pollingJob = null;
         }
@@ -217,7 +224,7 @@ public class TuyaDeviceService extends ServiceInstance<TuyaDeviceEntity> impleme
     @Override
     public void onConnected() {
         if (!entity.getStatus().isOnline()) {
-            setEntityStatus(Status.ONLINE, null);
+            setEntityStatus(ONLINE, null);
             scheduleRefreshDeviceStatus();
         }
     }
@@ -230,7 +237,7 @@ public class TuyaDeviceService extends ServiceInstance<TuyaDeviceEntity> impleme
         if (!deviceInfo.ip().equals(entity.getIp())) {
             entityContext.save(entity.setIp(deviceInfo.ip()));
         }
-        setEntityStatus(Status.WAITING, null);
+        setEntityStatus(WAITING, null);
 
         tuyaDeviceCommunicator = Optional.of(new TuyaDeviceCommunicator(this, eventLoopGroup,
             deviceInfo.ip(), deviceInfo.protocolVersion(), entity));
@@ -240,17 +247,16 @@ public class TuyaDeviceService extends ServiceInstance<TuyaDeviceEntity> impleme
     public void tryFetchDeviceInfo() {
         log.info("[{}]: Fetching device {} info", entity.getEntityID(), entity);
         TuyaOpenAPI api = entityContext.getBean(TuyaOpenAPI.class);
-        setEntityStatus(Status.INITIALIZE, null);
+        setEntityStatus(INITIALIZE, null);
         try {
             TuyaDeviceDTO tuyaDevice = api.getDevice(entity.getIeeeAddress(), entity);
             log.info("[{}]: Fetched device {} info successfully", entity.getEntityID(), entity);
             if (updateTuyaDeviceEntity(tuyaDevice, api, entity)) {
                 entityContext.save(entity);
             }
-
         } catch (Exception ex) {
             log.error("[{}]: Error fetched device {} info", entity.getEntityID(), entity);
-            setEntityStatus(Status.ERROR, CommonUtils.getErrorMessage(ex));
+            setEntityStatus(ERROR, CommonUtils.getErrorMessage(ex));
         }
     }
 
@@ -284,9 +290,10 @@ public class TuyaDeviceService extends ServiceInstance<TuyaDeviceEntity> impleme
     }
 
     private void createOrUpdateDeviceGroup() {
+        List<ConfigDeviceDefinition> devices = findDevices();
         Icon icon = new Icon(
-            CONFIG_DEVICE_SERVICE.getDeviceIcon(findDevices(), "fas fa-server"),
-            CONFIG_DEVICE_SERVICE.getDeviceIconColor(findDevices(), UI.Color.random())
+            CONFIG_DEVICE_SERVICE.getDeviceIcon(devices, "fas fa-server"),
+            CONFIG_DEVICE_SERVICE.getDeviceIconColor(devices, UI.Color.random())
         );
         entityContext.var().createGroup("tuya", "Tuya", true, new Icon("fas fa-fish-fins", TUYA_COLOR));
         entityContext.var().createGroup("tuya", requireNonNull(entity.getIeeeAddress()), entity.getDeviceFullName(), true,
@@ -294,8 +301,8 @@ public class TuyaDeviceService extends ServiceInstance<TuyaDeviceEntity> impleme
     }
 
     private void addDeviceStatusEndpoint() {
-        SchemaDp schemaDp = new SchemaDp().setDp(0).setCode(ENDPOINT_DEVICE_STATUS).setType(TuyaEndpointType.select)
-                                          .setRange(Stream.of(Status.values()).map(Enum::name).collect(Collectors.toList()));
+        SchemaDp schemaDp = new SchemaDp().setDp(0).setCode(ENDPOINT_DEVICE_STATUS).setType(EndpointType.select)
+                                          .setRange(Status.set(ERROR, INITIALIZE, OFFLINE, ONLINE, UNKNOWN, WAITING));
         ConfigDeviceEndpoint endpoint = CONFIG_DEVICE_SERVICE.getDeviceEndpoints().get(schemaDp.getCode());
         TuyaDeviceEndpoint tuyaDeviceEndpoint = new TuyaDeviceEndpoint(schemaDp, entity, endpoint) {
             @Override
@@ -305,12 +312,12 @@ public class TuyaDeviceService extends ServiceInstance<TuyaDeviceEntity> impleme
                 super.assembleUIAction(uiInputBuilder);
             }
         };
-        tuyaDeviceEndpoint.writeValue(Status.UNKNOWN.toString(), false);
+        tuyaDeviceEndpoint.writeValue(UNKNOWN.toString(), false);
         endpoints.put(schemaDp.getCode(), tuyaDeviceEndpoint);
     }
 
     private void addLastSeenEndpoint() {
-        SchemaDp schemaDp = new SchemaDp().setDp(0).setCode(ENDPOINT_LAST_SEEN).setType(TuyaEndpointType.number);
+        SchemaDp schemaDp = new SchemaDp().setDp(0).setCode(ENDPOINT_LAST_SEEN).setType(EndpointType.number);
         ConfigDeviceEndpoint endpoint = CONFIG_DEVICE_SERVICE.getDeviceEndpoints().get(schemaDp.getCode());
         TuyaDeviceEndpoint tuyaDeviceEndpoint = new TuyaDeviceEndpoint(schemaDp, entity, endpoint) {
 
@@ -350,7 +357,7 @@ public class TuyaDeviceService extends ServiceInstance<TuyaDeviceEntity> impleme
                                  .delay(Duration.ofSeconds(entity.getReconnectInterval()))
                                  .execute(() -> {
                                      if (!entity.getStatus().isOnline()) {
-                                         setEntityStatus(Status.INITIALIZE, null);
+                                         setEntityStatus(INITIALIZE, null);
                                          communicator.connect();
                                      }
                                  });

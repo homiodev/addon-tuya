@@ -1,7 +1,7 @@
 package org.homio.addon.tuya.service;
 
-import static org.homio.api.util.CommonUtils.OBJECT_MAPPER;
 import static org.homio.api.util.Constants.PRIMARY_DEVICE;
+import static org.homio.api.util.JsonUtils.OBJECT_MAPPER;
 
 import java.util.ArrayList;
 import java.util.HashMap;

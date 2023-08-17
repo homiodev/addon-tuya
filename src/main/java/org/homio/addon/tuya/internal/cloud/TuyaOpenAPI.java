@@ -1,6 +1,6 @@
 package org.homio.addon.tuya.internal.cloud;
 
-import static org.homio.api.util.CommonUtils.OBJECT_MAPPER;
+import static org.homio.api.util.JsonUtils.OBJECT_MAPPER;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.gson.Gson;
