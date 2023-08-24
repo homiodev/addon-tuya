@@ -174,7 +174,8 @@ public final class TuyaProjectEntity extends MicroControllerBaseEntity
                 && getCountryCode() != 0;
     }
 
-    public long getDeepHashCode() {
+    @Override
+    public long getEntityServiceHashCode() {
         return getJsonDataHashCode("appUID", "accessId", "accessSecret", "cc");
     }
 

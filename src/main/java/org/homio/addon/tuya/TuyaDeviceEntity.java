@@ -324,7 +324,8 @@ public final class TuyaDeviceEntity extends DeviceBaseEntity
         return schema;
     }
 
-    public long getDeepHashCode() {
+    @Override
+    public long getEntityServiceHashCode() {
         return Objects.hashCode(getIeeeAddress()) + getJsonDataHashCode("localKey", "pv", "pi", "ri", "cg", "mac", "pid", "ip");
     }
 

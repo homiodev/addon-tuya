@@ -15,9 +15,9 @@ import org.homio.api.model.Status;
 import org.homio.api.service.EntityService.ServiceInstance;
 import org.jetbrains.annotations.NotNull;
 
+@Getter
 public class TuyaProjectService extends ServiceInstance<TuyaProjectEntity> {
 
-    @Getter
     private final TuyaOpenAPI api;
 
     @SneakyThrows
@@ -61,11 +61,6 @@ public class TuyaProjectService extends ServiceInstance<TuyaProjectEntity> {
         if (!api.isConnected()) {
             api.login();
         }
-    }
-
-    @Override
-    protected long getEntityHashCode(TuyaProjectEntity entity) {
-        return entity.getDeepHashCode();
     }
 
     @Override

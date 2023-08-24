@@ -49,6 +49,7 @@ import org.springframework.stereotype.Service;
 /**
  * Implementation of the Tuya OpenApi specification
  */
+@Getter
 @Log4j2
 @Service
 public class TuyaOpenAPI {
@@ -57,7 +58,6 @@ public class TuyaOpenAPI {
     private static final String NONE_STRING = "";
     private static final String EMPTY_HASH = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 
-    @Getter
     @Setter
     private static @Nullable TuyaProjectEntity projectEntity;
 

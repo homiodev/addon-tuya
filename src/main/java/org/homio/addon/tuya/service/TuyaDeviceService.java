@@ -208,11 +208,6 @@ public class TuyaDeviceService extends ServiceInstance<TuyaDeviceEntity> impleme
     }
 
     @Override
-    protected long getEntityHashCode(TuyaDeviceEntity entity) {
-        return entity.getDeepHashCode();
-    }
-
-    @Override
     public void onDisconnected(@NotNull String message) {
         setEntityStatus(ERROR, message);
         if (EntityContextBGP.cancel(pollingJob)) {

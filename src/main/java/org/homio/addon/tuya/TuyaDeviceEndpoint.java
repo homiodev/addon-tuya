@@ -22,6 +22,7 @@ import org.homio.api.ui.field.action.v1.UIInputBuilder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+@Getter
 @SuppressWarnings("CommentedOutCode")
 @Log4j2
 public class TuyaDeviceEndpoint extends BaseDeviceEndpoint<TuyaDeviceEntity> {
@@ -30,7 +31,6 @@ public class TuyaDeviceEndpoint extends BaseDeviceEndpoint<TuyaDeviceEntity> {
     private static final List<String> DIMMER_CHANNEL_CODES = List.of("bright_value", "bright_value_1", "bright_value_2",
         "temp_value");
 
-    @Getter
     private final int dp;
     @Getter
     private final @Nullable Integer dp2;

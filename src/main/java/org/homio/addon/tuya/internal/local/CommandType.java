@@ -8,6 +8,7 @@ import java.util.Arrays;
 /**
  * Maps the numeric command types to an enum
  */
+@Getter
 @RequiredArgsConstructor
 public enum CommandType {
     UDP(0),
@@ -47,7 +48,6 @@ public enum CommandType {
     LAN_SET_GW_CHANNEL(252),
     DP_QUERY_NOT_SUPPORTED(-1); // this is an internal value
 
-    @Getter
     private final int code;
 
     public static CommandType fromCode(int code) {

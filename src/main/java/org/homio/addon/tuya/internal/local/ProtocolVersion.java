@@ -9,12 +9,12 @@ import java.util.Arrays;
 /**
  * Maps the protocol version String to
  */
+@Getter
 public enum ProtocolVersion implements KeyValueEnum {
     V3_1("3.1"),
     V3_3("3.3"),
     V3_4("3.4");
 
-    @Getter
     private final String versionString;
 
     ProtocolVersion(String versionString) {
