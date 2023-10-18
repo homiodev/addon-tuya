@@ -12,6 +12,7 @@ import lombok.extern.log4j.Log4j2;
 import org.homio.addon.tuya.internal.util.SchemaDp;
 import org.homio.api.model.ActionResponseModel;
 import org.homio.api.model.Icon;
+import org.homio.api.model.OptionModel;
 import org.homio.api.model.device.ConfigDeviceEndpoint;
 import org.homio.api.model.endpoint.BaseDeviceEndpoint;
 import org.homio.api.state.DecimalType;
@@ -42,13 +43,13 @@ public class TuyaDeviceEndpoint extends BaseDeviceEndpoint<TuyaDeviceEntity> {
         @NotNull SchemaDp schemaDp,
         @NotNull TuyaDeviceEntity device,
         @Nullable ConfigDeviceEndpoint configEndpoint) {
-        super("TUYA");
-        this.icon = new Icon(
+        super("TUYA", device.getEntityContext());
+        setIcon(new Icon(
             "fa fa-fw " + (configEndpoint == null ? "fa-tablet-screen-button" : configEndpoint.getIcon()),
-            configEndpoint == null ? "#3894B5" : configEndpoint.getIconColor());
-        this.range = schemaDp.getRange();
-        this.min = schemaDp.getMin();
-        this.max = schemaDp.getMax();
+            configEndpoint == null ? "#3894B5" : configEndpoint.getIconColor()));
+        this.setRange(OptionModel.list(schemaDp.getRange()));
+        setMin(schemaDp.getMin());
+        setMax(schemaDp.getMax());
         this.schemaDp = schemaDp;
         this.dp = schemaDp.dp;
         this.dp2 = schemaDp.getDp2();
@@ -57,7 +58,6 @@ public class TuyaDeviceEndpoint extends BaseDeviceEndpoint<TuyaDeviceEntity> {
             CONFIG_DEVICE_SERVICE,
             schemaDp.getCode(),
             device,
-            device.getService().getEntityContext(),
             schemaDp.getUnit(),
             Boolean.TRUE.equals(schemaDp.getReadable()),
             Boolean.TRUE.equals(schemaDp.getWritable()),
@@ -104,7 +104,7 @@ public class TuyaDeviceEndpoint extends BaseDeviceEndpoint<TuyaDeviceEntity> {
     public void writeValue(@NotNull State state) {
         Object targetValue;
         State targetState;
-        switch (endpointType) {
+        switch (getEndpointType()) {
             case bool -> {
                 targetState = OnOffType.of(state.boolValue());
                 targetValue = targetState.boolValue();
@@ -124,6 +124,8 @@ public class TuyaDeviceEndpoint extends BaseDeviceEndpoint<TuyaDeviceEntity> {
 
     @Override
     public UIInputBuilder createDimmerActionBuilder(@NotNull UIInputBuilder uiInputBuilder) {
+        State value = getValue();
+        TuyaDeviceEntity device = getDevice();
         if (dp2 != null) {
             uiInputBuilder.addCheckbox(getEntityID(), value.boolValue(), (entityContext, params) -> {
                 setValue(OnOffType.of(params.getBoolean("value")), false);
@@ -152,11 +154,13 @@ public class TuyaDeviceEndpoint extends BaseDeviceEndpoint<TuyaDeviceEntity> {
 
     @Override
     public ActionResponseModel onExternalUpdated() {
-        return device.getService().send(Map.of(dp, getValue().rawValue()));
+        return getDevice().getService().send(Map.of(dp, getValue().rawValue()));
     }
 
     @Override
     public UIInputBuilder createColorActionBuilder(@NotNull UIInputBuilder uiInputBuilder) {
+        State value = getValue();
+        TuyaDeviceEntity device = getDevice();
         if (dp2 != null) {
             uiInputBuilder.addCheckbox(getEntityID(), value.boolValue(), (entityContext, params) -> {
                 setValue(OnOffType.of(params.getBoolean("value")), false);
@@ -232,11 +236,10 @@ public class TuyaDeviceEndpoint extends BaseDeviceEndpoint<TuyaDeviceEntity> {
         }
     }
 
-    @Override
-    protected String decodeColor(String value) {
+   /* protected String decodeColor(String value) {
         oldColorMode = value.length() == 14;
         return hexColorDecode(value);
-    }
+    }*/
 
     @Override
     public @NotNull Set<String> getHiddenEndpoints() {

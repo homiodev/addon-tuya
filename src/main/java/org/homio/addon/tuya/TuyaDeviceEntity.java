@@ -275,7 +275,7 @@ public final class TuyaDeviceEntity extends DeviceBaseEntity
     }
 
     public boolean tryUpdateDeviceEntity(TuyaDeviceDTO device, String deviceMac) {
-        int hashCode = getEntityHashCode();
+        long hashCode = getEntityHashCode();
         setCategory(device.category);
         setMac(deviceMac);
         setLocalKey(device.localKey);
@@ -344,7 +344,7 @@ public final class TuyaDeviceEntity extends DeviceBaseEntity
     public void assembleActions(UIInputBuilder uiInputBuilder) {
         @NotNull List<ConfigDeviceDefinition> configDeviceDefinitions = getService().findDevices();
         List<WidgetDefinition> widgetDefinitions = CONFIG_DEVICE_SERVICE.getDeviceWidgets(configDeviceDefinitions);
-        getEntityContext().widget().createTemplateWidgetActions(uiInputBuilder, this, widgetDefinitions);
+        uiInputBuilder.getEntityContext().widget().createTemplateWidgetActions(uiInputBuilder, this, widgetDefinitions);
     }
 
     @Override

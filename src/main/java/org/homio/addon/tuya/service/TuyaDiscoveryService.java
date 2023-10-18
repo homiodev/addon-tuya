@@ -20,8 +20,7 @@ import org.homio.addon.tuya.internal.cloud.dto.FactoryInformation;
 import org.homio.addon.tuya.internal.cloud.dto.TuyaDeviceDTO;
 import org.homio.addon.tuya.internal.util.SchemaDp;
 import org.homio.api.EntityContext;
-import org.homio.api.service.scan.BaseItemsDiscovery.DeviceScannerResult;
-import org.homio.api.service.scan.ItemDiscoverySupport;
+import org.homio.api.service.discovery.ItemDiscoverySupport;
 import org.homio.hquery.ProgressBar;
 import org.springframework.stereotype.Service;
 
@@ -58,7 +57,7 @@ public class TuyaDiscoveryService implements ItemDiscoverySupport {
             processDeviceResponse(List.of(), tuyaProjectEntity.getService(), 0, deviceHandler);
         } catch (Exception ex) {
             log.error("Error scan tuya devices", ex);
-            entityContext.ui().sendErrorMessage(ex);
+            entityContext.ui().toastr().error(ex);
         }
 
         return result;

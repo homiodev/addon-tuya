@@ -69,7 +69,7 @@ public class TuyaProjectService extends ServiceInstance<TuyaProjectEntity> {
     }
 
     public void updateNotificationBlock() {
-        entityContext.ui().addNotificationBlock(entityID, "Tuya", new Icon(TUYA_ICON, TUYA_COLOR), builder -> {
+        entityContext.ui().notification().addBlock(entityID, "Tuya", new Icon(TUYA_ICON, TUYA_COLOR), builder -> {
             builder.setStatus(entity.getStatus()).linkToEntity(entity);
             builder.setDevices(entityContext.findAll(TuyaDeviceEntity.class));
         });

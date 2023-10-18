@@ -52,6 +52,7 @@ import org.homio.api.model.device.ConfigDeviceEndpoint;
 import org.homio.api.model.endpoint.DeviceEndpoint.EndpointType;
 import org.homio.api.service.EntityService.ServiceInstance;
 import org.homio.api.state.DecimalType;
+import org.homio.api.state.State;
 import org.homio.api.state.StringType;
 import org.homio.api.ui.UI;
 import org.homio.api.ui.field.action.v1.UIInputBuilder;
@@ -259,9 +260,12 @@ public class TuyaDeviceService extends ServiceInstance<TuyaDeviceEntity> impleme
         endpoints.get(ENDPOINT_LAST_SEEN).setValue(new DecimalType(System.currentTimeMillis()), true);
         TuyaDeviceEndpoint endpoint = endpoints.values().stream().filter(p -> p.getDp() == dp).findAny().orElse(null);
         if (endpoint != null) {
-            if (!endpoint.writeValue(rawValue, true)) {
+            State state = endpoint.rawValueToState(rawValue);
+            if (state == null) {
                 log.warn("[{}]: Could not update endpoint '{}' with value '{}'. Datatype incompatible.",
                     entity.getEntityID(), endpoint.getDeviceID(), rawValue);
+            } else {
+                endpoint.setValue(state, true);
             }
         } else {
             List<TuyaDeviceEndpoint> dp2Endpoints = endpoints.values().stream().filter(p -> Objects.equals(p.getDp2(), dp)).toList();
@@ -270,7 +274,7 @@ public class TuyaDeviceService extends ServiceInstance<TuyaDeviceEntity> impleme
             } else {
                 if (Boolean.class.isAssignableFrom(rawValue.getClass())) {
                     for (TuyaDeviceEndpoint dp2Endpoint : dp2Endpoints) {
-                        dp2Endpoint.writeValue(rawValue, true);
+                        dp2Endpoint.setValue(State.of(rawValue), true);
                     }
                     return;
                 }
@@ -290,9 +294,11 @@ public class TuyaDeviceService extends ServiceInstance<TuyaDeviceEntity> impleme
             CONFIG_DEVICE_SERVICE.getDeviceIcon(devices, "fas fa-server"),
             CONFIG_DEVICE_SERVICE.getDeviceIconColor(devices, UI.Color.random())
         );
-        entityContext.var().createGroup("tuya", "Tuya", true, new Icon("fas fa-fish-fins", TUYA_COLOR));
-        entityContext.var().createGroup("tuya", requireNonNull(entity.getIeeeAddress()), entity.getDeviceFullName(), true,
-            icon, getGroupDescription());
+        entityContext.var().createGroup("tuya", "Tuya", builder ->
+            builder.setIcon(new Icon("fas fa-fish-fins", TUYA_COLOR)).setLocked(true));
+        entityContext.var().createSubGroup("tuya", requireNonNull(entity.getIeeeAddress()), entity.getDeviceFullName(), builder -> {
+            builder.setIcon(icon).setDescription(getGroupDescription()).setLocked(true);
+        });
     }
 
     private void addDeviceStatusEndpoint() {
@@ -307,7 +313,7 @@ public class TuyaDeviceService extends ServiceInstance<TuyaDeviceEntity> impleme
                 super.assembleUIAction(uiInputBuilder);
             }
         };
-        tuyaDeviceEndpoint.writeValue(UNKNOWN.toString(), false);
+        tuyaDeviceEndpoint.setInitialValue(new StringType(UNKNOWN.toString()));
         endpoints.put(schemaDp.getCode(), tuyaDeviceEndpoint);
     }
 
@@ -321,7 +327,7 @@ public class TuyaDeviceService extends ServiceInstance<TuyaDeviceEntity> impleme
                 uiInputBuilder.addDuration(getValue().longValue(), null);
             }
         };
-        tuyaDeviceEndpoint.writeValue(System.currentTimeMillis(), false);
+        tuyaDeviceEndpoint.setInitialValue(new DecimalType(System.currentTimeMillis()));
         endpoints.put(schemaDp.getCode(), tuyaDeviceEndpoint);
     }
 
