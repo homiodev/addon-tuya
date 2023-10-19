@@ -6,7 +6,6 @@ import java.awt.Color;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import lombok.Getter;
 import lombok.extern.log4j.Log4j2;
 import org.homio.addon.tuya.internal.util.SchemaDp;
@@ -24,7 +23,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 @Getter
-@SuppressWarnings("CommentedOutCode")
 @Log4j2
 public class TuyaDeviceEndpoint extends BaseDeviceEndpoint<TuyaDeviceEntity> {
 
@@ -50,6 +48,7 @@ public class TuyaDeviceEndpoint extends BaseDeviceEndpoint<TuyaDeviceEntity> {
         this.setRange(OptionModel.list(schemaDp.getRange()));
         setMin(schemaDp.getMin());
         setMax(schemaDp.getMax());
+        setUnit(schemaDp.getUnit());
         this.schemaDp = schemaDp;
         this.dp = schemaDp.dp;
         this.dp2 = schemaDp.getDp2();
@@ -58,11 +57,16 @@ public class TuyaDeviceEndpoint extends BaseDeviceEndpoint<TuyaDeviceEntity> {
             CONFIG_DEVICE_SERVICE,
             schemaDp.getCode(),
             device,
-            schemaDp.getUnit(),
             Boolean.TRUE.equals(schemaDp.getReadable()),
             Boolean.TRUE.equals(schemaDp.getWritable()),
             schemaDp.getCode(),
             evaluateEndpointType());
+
+        setUpdateHandler(state -> {
+            getDevice().getService().send(Map.of(dp, state.rawValue()));
+        });
+
+        getOrCreateVariable();
     }
 
     private static int hexColorToBrightness(String hexColor) {
@@ -101,28 +105,6 @@ public class TuyaDeviceEndpoint extends BaseDeviceEndpoint<TuyaDeviceEntity> {
     }
 
     @Override
-    public void writeValue(@NotNull State state) {
-        Object targetValue;
-        State targetState;
-        switch (getEndpointType()) {
-            case bool -> {
-                targetState = OnOffType.of(state.boolValue());
-                targetValue = targetState.boolValue();
-            }
-            case number, dimmer -> {
-                targetState = state instanceof DecimalType ? (DecimalType) state : new DecimalType(state.intValue());
-                targetValue = targetState.intValue();
-            }
-            default -> {
-                targetState = state;
-                targetValue = state.toString();
-            }
-        }
-        setValue(targetState, true);
-        getDevice().getService().send(Map.of(dp, targetValue));
-    }
-
-    @Override
     public UIInputBuilder createDimmerActionBuilder(@NotNull UIInputBuilder uiInputBuilder) {
         State value = getValue();
         TuyaDeviceEntity device = getDevice();
@@ -150,11 +132,6 @@ public class TuyaDeviceEndpoint extends BaseDeviceEndpoint<TuyaDeviceEntity> {
                 return device.getService().send(commandRequest);
             }).setDisabled(!device.getStatus().isOnline());
         return uiInputBuilder;
-    }
-
-    @Override
-    public ActionResponseModel onExternalUpdated() {
-        return getDevice().getService().send(Map.of(dp, getValue().rawValue()));
     }
 
     @Override
@@ -242,7 +219,7 @@ public class TuyaDeviceEndpoint extends BaseDeviceEndpoint<TuyaDeviceEntity> {
     }*/
 
     @Override
-    public @NotNull Set<String> getHiddenEndpoints() {
-        return Set.of();
+    public String getVariableGroupID() {
+        return "tuya-" + getDeviceID();
     }
 }
