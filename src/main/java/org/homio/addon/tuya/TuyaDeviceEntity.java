@@ -29,7 +29,7 @@ import org.homio.addon.tuya.internal.cloud.dto.TuyaDeviceDTO;
 import org.homio.addon.tuya.internal.local.ProtocolVersion;
 import org.homio.addon.tuya.internal.util.SchemaDp;
 import org.homio.addon.tuya.service.TuyaDeviceService;
-import org.homio.api.EntityContext;
+import org.homio.api.Context;
 import org.homio.api.entity.device.DeviceBaseEntity;
 import org.homio.api.entity.device.DeviceEndpointsBehaviourContract;
 import org.homio.api.entity.log.HasEntityLog;
@@ -75,6 +75,7 @@ public final class TuyaDeviceEntity extends DeviceBaseEntity
     DeviceEndpointsBehaviourContract,
     EntityService<TuyaDeviceService, TuyaDeviceEntity>, HasEntityLog {
 
+    public static final String PREFIX = "tuya";
     private static final Map<String, Map<String, SchemaDp>> SCHEMAS = readSchemaFromFile();
 
     @Override
@@ -293,9 +294,8 @@ public final class TuyaDeviceEntity extends DeviceBaseEntity
         return hashCode != getEntityHashCode();
     }
 
-    @Override
-    protected @NotNull String getDevicePrefix() {
-        return "tuya-device";
+    public boolean isCompactMode() {
+        return context().setting().getValue(TuyaEntityCompactModeSetting.class);
     }
 
     @SneakyThrows
@@ -303,8 +303,10 @@ public final class TuyaDeviceEntity extends DeviceBaseEntity
         setJsonData("schema", OBJECT_MAPPER.writeValueAsString(schemaDps));
     }
 
-    public boolean isCompactMode() {
-        return getEntityContext().setting().getValue(TuyaEntityCompactModeSetting.class);
+    @UIContextMenuAction(value = "TUYA.FETCH_DEVICE_INFO", icon = "fas fa-barcode", iconColor = Color.PRIMARY_COLOR)
+    public ActionResponseModel fetchDeviceInfo(Context context) {
+        getService().tryFetchDeviceInfo();
+        return ActionResponseModel.success();
     }
 
     @JsonIgnore
@@ -329,10 +331,11 @@ public final class TuyaDeviceEntity extends DeviceBaseEntity
         return Objects.hashCode(getIeeeAddress()) + getJsonDataHashCode("localKey", "pv", "pi", "ri", "cg", "mac", "pid", "ip");
     }
 
-    @UIContextMenuAction(value = "TUYA.FETCH_DEVICE_INFO", icon = "fas fa-barcode", iconColor = Color.PRIMARY_COLOR)
-    public ActionResponseModel fetchDeviceInfo(EntityContext entityContext) {
-        getService().tryFetchDeviceInfo();
-        return ActionResponseModel.success();
+    @Override
+    public void assembleActions(UIInputBuilder uiInputBuilder) {
+        @NotNull List<ConfigDeviceDefinition> configDeviceDefinitions = getService().findDevices();
+        List<WidgetDefinition> widgetDefinitions = CONFIG_DEVICE_SERVICE.getDeviceWidgets(configDeviceDefinitions);
+        uiInputBuilder.context().widget().createTemplateWidgetActions(uiInputBuilder, this, widgetDefinitions);
     }
 
     @Override
@@ -341,10 +344,8 @@ public final class TuyaDeviceEntity extends DeviceBaseEntity
     }
 
     @Override
-    public void assembleActions(UIInputBuilder uiInputBuilder) {
-        @NotNull List<ConfigDeviceDefinition> configDeviceDefinitions = getService().findDevices();
-        List<WidgetDefinition> widgetDefinitions = CONFIG_DEVICE_SERVICE.getDeviceWidgets(configDeviceDefinitions);
-        uiInputBuilder.getEntityContext().widget().createTemplateWidgetActions(uiInputBuilder, this, widgetDefinitions);
+    public @NotNull TuyaDeviceService createService(@NotNull Context context) {
+        return new TuyaDeviceService(context, this);
     }
 
     @Override
@@ -353,8 +354,8 @@ public final class TuyaDeviceEntity extends DeviceBaseEntity
     }
 
     @Override
-    public @NotNull TuyaDeviceService createService(@NotNull EntityContext entityContext) {
-        return new TuyaDeviceService(entityContext, this);
+    protected @NotNull String getDevicePrefix() {
+        return PREFIX;
     }
 
     @SneakyThrows

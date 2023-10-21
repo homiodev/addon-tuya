@@ -19,7 +19,7 @@ import org.homio.addon.tuya.internal.cloud.dto.DeviceSchema.Description;
 import org.homio.addon.tuya.internal.cloud.dto.FactoryInformation;
 import org.homio.addon.tuya.internal.cloud.dto.TuyaDeviceDTO;
 import org.homio.addon.tuya.internal.util.SchemaDp;
-import org.homio.api.EntityContext;
+import org.homio.api.Context;
 import org.homio.api.service.discovery.ItemDiscoverySupport;
 import org.homio.hquery.ProgressBar;
 import org.springframework.stereotype.Service;
@@ -37,18 +37,18 @@ public class TuyaDiscoveryService implements ItemDiscoverySupport {
     }
 
     @Override
-    public DeviceScannerResult scan(EntityContext entityContext, ProgressBar progressBar, String headerConfirmButtonKey) {
+    public DeviceScannerResult scan(Context context, ProgressBar progressBar, String headerConfirmButtonKey) {
         DeviceScannerResult result = new DeviceScannerResult();
         Map<String, TuyaDeviceEntity> existedDevices =
-            entityContext.findAll(TuyaDeviceEntity.class)
+            context.db().findAll(TuyaDeviceEntity.class)
                          .stream()
                          .collect(Collectors.toMap(TuyaDeviceEntity::getIeeeAddress, t -> t));
         try {
-            TuyaProjectEntity tuyaProjectEntity = entityContext.getEntityRequire(TuyaProjectEntity.class, PRIMARY_DEVICE);
+            TuyaProjectEntity tuyaProjectEntity = context.db().getEntityRequire(TuyaProjectEntity.class, PRIMARY_DEVICE);
             Consumer<TuyaDeviceDTO> deviceHandler = device -> {
                 TuyaDeviceEntity deviceEntity = existedDevices.getOrDefault(device.id, new TuyaDeviceEntity());
                 if (updateTuyaDeviceEntity(device, tuyaProjectEntity.getService().getApi(), deviceEntity)) {
-                    entityContext.save(deviceEntity);
+                    context.db().save(deviceEntity);
                     result.getNewCount().incrementAndGet();
                 } else {
                     result.getExistedCount().incrementAndGet();
@@ -57,15 +57,15 @@ public class TuyaDiscoveryService implements ItemDiscoverySupport {
             processDeviceResponse(List.of(), tuyaProjectEntity.getService(), 0, deviceHandler);
         } catch (Exception ex) {
             log.error("Error scan tuya devices", ex);
-            entityContext.ui().toastr().error(ex);
+            context.ui().toastr().error(ex);
         }
 
         return result;
     }
 
-    public List<TuyaDeviceDTO> getDeviceList(EntityContext entityContext) {
+    public List<TuyaDeviceDTO> getDeviceList(Context context) {
         List<TuyaDeviceDTO> list = new ArrayList<>();
-        TuyaProjectEntity entity = entityContext.getEntityRequire(TuyaProjectEntity.class, PRIMARY_DEVICE);
+        TuyaProjectEntity entity = context.db().getEntityRequire(TuyaProjectEntity.class, PRIMARY_DEVICE);
         processDeviceResponse(List.of(), entity.getService(), 0, list::add);
         return list;
     }

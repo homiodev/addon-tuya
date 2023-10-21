@@ -12,7 +12,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.homio.addon.tuya.internal.cloud.TuyaOpenAPI;
 import org.homio.addon.tuya.internal.local.UdpDiscoveryListener;
 import org.homio.api.AddonEntrypoint;
-import org.homio.api.EntityContext;
+import org.homio.api.Context;
 import org.homio.hquery.hardware.network.NetworkHardwareRepository;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
@@ -29,20 +29,20 @@ public class TuyaEntrypoint implements AddonEntrypoint {
 
     public static final @NotNull UdpDiscoveryListener udpDiscoveryListener = new UdpDiscoveryListener(eventLoopGroup);
 
-    private final EntityContext entityContext;
+    private final Context context;
 
     @Override
     public void init() {
-        entityContext.setting().listenValue(TuyaEntityCompactModeSetting.class, "tuya-compact-mode",
-            (value) -> entityContext.ui().updateItems(TuyaDeviceEntity.class));
-        TuyaProjectEntity tuyaProjectEntity = ensureEntityExists(entityContext);
+        context.setting().listenValue(TuyaEntityCompactModeSetting.class, "tuya-compact-mode",
+            (value) -> context.ui().updateItems(TuyaDeviceEntity.class));
+        TuyaProjectEntity tuyaProjectEntity = ensureEntityExists(context);
         udpDiscoveryListener.setProjectEntityID(tuyaProjectEntity.getEntityID());
         try {
             udpDiscoveryListener.activate();
         } catch (Exception ex) {
             tuyaProjectEntity.setUdpMessage("Unable to start tuya udp discovery");
             log.error("Unable to start tuya udp discovery", ex);
-            entityContext.bgp().builder("tuya-udp-restart")
+            context.bgp().builder("tuya-udp-restart")
                          .interval(Duration.ofSeconds(60))
                          .execute(context -> {
                              udpDiscoveryListener.activate();
@@ -50,8 +50,8 @@ public class TuyaEntrypoint implements AddonEntrypoint {
                              return null;
                          });
         }
-        entityContext.setting().listenValue(ScanTuyaDevicesSetting.class, "scan-tuya", () ->
-            tuyaProjectEntity.scanDevices(entityContext));
+        context.setting().listenValue(ScanTuyaDevicesSetting.class, "scan-tuya", () ->
+            tuyaProjectEntity.scanDevices(context));
 
         TuyaOpenAPI.setProjectEntity(tuyaProjectEntity);
         udpDiscoveryListener.setProjectEntityID(tuyaProjectEntity.getEntityID());
@@ -65,38 +65,38 @@ public class TuyaEntrypoint implements AddonEntrypoint {
         // keep tuya project and all devices in db in case of recovery
     }
 
-    public @NotNull TuyaProjectEntity ensureEntityExists(EntityContext entityContext) {
-        TuyaProjectEntity entity = entityContext.getEntity(TuyaProjectEntity.class, PRIMARY_DEVICE);
+    public @NotNull TuyaProjectEntity ensureEntityExists(Context context) {
+        TuyaProjectEntity entity = context.db().getEntity(TuyaProjectEntity.class, PRIMARY_DEVICE);
         if (entity == null) {
             entity = new TuyaProjectEntity();
             entity.setEntityID(PRIMARY_DEVICE);
             entity.setName("Tuya primary project");
-            if (entityContext.event().isInternetUp()) {
-                Integer countryCode = getCountryCode(entityContext);
+            if (context.event().isInternetUp()) {
+                Integer countryCode = getCountryCode(context);
                 if (countryCode != null) {
                     entity.setCountryCode(countryCode);
                 }
             }
-            entityContext.save(entity, false);
+            context.db().save(entity, false);
         }
         if (entity.getCountryCode() == null) {
-            scheduleUpdateTuyaProjectOnInternetUp(entityContext);
+            scheduleUpdateTuyaProjectOnInternetUp(context);
         }
         return entity;
     }
 
-    private void scheduleUpdateTuyaProjectOnInternetUp(EntityContext entityContext) {
-        entityContext.event().runOnceOnInternetUp("create-tuya-project", () -> {
-            Integer countryCode = getCountryCode(entityContext);
+    private void scheduleUpdateTuyaProjectOnInternetUp(Context context) {
+        context.event().runOnceOnInternetUp("create-tuya-project", () -> {
+            Integer countryCode = getCountryCode(context);
             if (countryCode != null) {
-                TuyaProjectEntity projectEntity = entityContext.getEntityRequire(TuyaProjectEntity.class, PRIMARY_DEVICE);
-                entityContext.save(projectEntity.setCountryCode(countryCode));
+                TuyaProjectEntity projectEntity = context.db().getEntityRequire(TuyaProjectEntity.class, PRIMARY_DEVICE);
+                context.db().save(projectEntity.setCountryCode(countryCode));
             }
         });
     }
 
-    private Integer getCountryCode(EntityContext entityContext) {
-        NetworkHardwareRepository networkHardwareRepository = entityContext.getBean(NetworkHardwareRepository.class);
+    private Integer getCountryCode(Context context) {
+        NetworkHardwareRepository networkHardwareRepository = context.getBean(NetworkHardwareRepository.class);
         String ipAddress = networkHardwareRepository.getOuterIpAddress();
         JsonNode ipGeoLocation = networkHardwareRepository.getIpGeoLocation(ipAddress);
         String country = ipGeoLocation.path("country").asText();

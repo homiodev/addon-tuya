@@ -9,7 +9,7 @@ import lombok.SneakyThrows;
 import org.homio.addon.tuya.TuyaDeviceEntity;
 import org.homio.addon.tuya.TuyaProjectEntity;
 import org.homio.addon.tuya.internal.cloud.TuyaOpenAPI;
-import org.homio.api.EntityContext;
+import org.homio.api.Context;
 import org.homio.api.model.Icon;
 import org.homio.api.model.Status;
 import org.homio.api.service.EntityService.ServiceInstance;
@@ -21,9 +21,9 @@ public class TuyaProjectService extends ServiceInstance<TuyaProjectEntity> {
     private final TuyaOpenAPI api;
 
     @SneakyThrows
-    public TuyaProjectService(@NotNull EntityContext entityContext, TuyaProjectEntity entity) {
-        super(entityContext, entity, true);
-        this.api = entityContext.getBean(TuyaOpenAPI.class);
+    public TuyaProjectService(@NotNull Context context, TuyaProjectEntity entity) {
+        super(context, entity, true);
+        this.api = context.getBean(TuyaOpenAPI.class);
     }
 
     public void initialize() {
@@ -33,7 +33,7 @@ public class TuyaProjectService extends ServiceInstance<TuyaProjectEntity> {
             testService();
             entity.setStatusOnline();
             // fire device discovery
-            entityContext.getBean(TuyaDiscoveryService.class).scan(entityContext, null, null);
+            context.getBean(TuyaDiscoveryService.class).scan(context, null, null);
         } catch (TuyaOpenAPI.TuyaApiNotReadyException te) {
             scheduleInitialize();
         } catch (Exception ex) {
@@ -43,12 +43,10 @@ public class TuyaProjectService extends ServiceInstance<TuyaProjectEntity> {
         }
     }
 
-    private void scheduleInitialize() {
-        entityContext.event().runOnceOnInternetUp("tuya-project-init", () -> {
-            if (!entity.getStatus().isOnline()) {
-                entityContext.bgp().builder("init-tuya-project-service").delay(Duration.ofSeconds(5))
-                        .execute(this::initialize);
-            }
+    public void updateNotificationBlock() {
+        context.ui().notification().addBlock(entityID, "Tuya", new Icon(TUYA_ICON, TUYA_COLOR), builder -> {
+            builder.setStatus(entity.getStatus()).linkToEntity(entity);
+            builder.setDevices(context.db().findAll(TuyaDeviceEntity.class));
         });
     }
 
@@ -68,10 +66,12 @@ public class TuyaProjectService extends ServiceInstance<TuyaProjectEntity> {
         updateNotificationBlock();
     }
 
-    public void updateNotificationBlock() {
-        entityContext.ui().notification().addBlock(entityID, "Tuya", new Icon(TUYA_ICON, TUYA_COLOR), builder -> {
-            builder.setStatus(entity.getStatus()).linkToEntity(entity);
-            builder.setDevices(entityContext.findAll(TuyaDeviceEntity.class));
+    private void scheduleInitialize() {
+        context.event().runOnceOnInternetUp("tuya-project-init", () -> {
+            if (!entity.getStatus().isOnline()) {
+                context.bgp().builder("init-tuya-project-service").delay(Duration.ofSeconds(5))
+                        .execute(this::initialize);
+            }
         });
     }
 }

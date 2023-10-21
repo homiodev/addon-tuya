@@ -9,7 +9,6 @@ import java.util.Map;
 import lombok.Getter;
 import lombok.extern.log4j.Log4j2;
 import org.homio.addon.tuya.internal.util.SchemaDp;
-import org.homio.api.model.ActionResponseModel;
 import org.homio.api.model.Icon;
 import org.homio.api.model.OptionModel;
 import org.homio.api.model.device.ConfigDeviceEndpoint;
@@ -41,7 +40,7 @@ public class TuyaDeviceEndpoint extends BaseDeviceEndpoint<TuyaDeviceEntity> {
         @NotNull SchemaDp schemaDp,
         @NotNull TuyaDeviceEntity device,
         @Nullable ConfigDeviceEndpoint configEndpoint) {
-        super("TUYA", device.getEntityContext());
+        super("TUYA", device.context());
         setIcon(new Icon(
             "fa fa-fw " + (configEndpoint == null ? "fa-tablet-screen-button" : configEndpoint.getIcon()),
             configEndpoint == null ? "#3894B5" : configEndpoint.getIconColor()));
@@ -109,13 +108,13 @@ public class TuyaDeviceEndpoint extends BaseDeviceEndpoint<TuyaDeviceEntity> {
         State value = getValue();
         TuyaDeviceEntity device = getDevice();
         if (dp2 != null) {
-            uiInputBuilder.addCheckbox(getEntityID(), value.boolValue(), (entityContext, params) -> {
+            uiInputBuilder.addCheckbox(getEntityID(), value.boolValue(), (context, params) -> {
                 setValue(OnOffType.of(params.getBoolean("value")), false);
                 return device.getService().send(Map.of(dp2, value.boolValue()));
             }).setDisabled(!device.getStatus().isOnline());
         }
         uiInputBuilder.addSlider(getEntityID(), value.floatValue(0), 0F, 100F,
-            (entityContext, params) -> {
+            (context, params) -> {
                 Map<Integer, Object> commandRequest = new HashMap<>();
                 int brightness = (int) Math.round(params.getInt("value") * schemaDp.getMax() / 100.0);
                 setValue(new DecimalType(brightness), false);
@@ -139,12 +138,12 @@ public class TuyaDeviceEndpoint extends BaseDeviceEndpoint<TuyaDeviceEntity> {
         State value = getValue();
         TuyaDeviceEntity device = getDevice();
         if (dp2 != null) {
-            uiInputBuilder.addCheckbox(getEntityID(), value.boolValue(), (entityContext, params) -> {
+            uiInputBuilder.addCheckbox(getEntityID(), value.boolValue(), (context, params) -> {
                 setValue(OnOffType.of(params.getBoolean("value")), false);
                 return device.getService().send(Map.of(dp2, value.boolValue()));
             }).setDisabled(!device.getStatus().isOnline());
         }
-        uiInputBuilder.addColorPicker(getEntityID(), value.stringValue(), (entityContext, params) -> {
+        uiInputBuilder.addColorPicker(getEntityID(), value.stringValue(), (context, params) -> {
             Map<Integer, Object> commandRequest = new HashMap<>();
             setValue(new StringType(params.getString("value")), false);
             commandRequest.put(dp, hexColorEncode(value.stringValue()));

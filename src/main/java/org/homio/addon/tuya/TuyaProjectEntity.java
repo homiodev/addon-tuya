@@ -1,7 +1,7 @@
 package org.homio.addon.tuya;
 
-import static org.homio.api.EntityContextSetting.getMemValue;
-import static org.homio.api.EntityContextSetting.setMemValue;
+import static org.homio.api.ContextSetting.getMemValue;
+import static org.homio.api.ContextSetting.setMemValue;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Entity;
@@ -17,7 +17,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.homio.addon.tuya.internal.cloud.TuyaOpenAPI;
 import org.homio.addon.tuya.service.TuyaDiscoveryService;
 import org.homio.addon.tuya.service.TuyaProjectService;
-import org.homio.api.EntityContext;
+import org.homio.api.Context;
 import org.homio.api.entity.HasStatusAndMsg;
 import org.homio.api.entity.log.HasEntityLog;
 import org.homio.api.entity.types.MicroControllerBaseEntity;
@@ -31,6 +31,7 @@ import org.homio.api.ui.field.UIField;
 import org.homio.api.ui.field.UIFieldGroup;
 import org.homio.api.ui.field.UIFieldIgnore;
 import org.homio.api.ui.field.UIFieldLinkToEntity;
+import org.homio.api.ui.field.UIFieldLinkToEntity.NavEntityTitle;
 import org.homio.api.ui.field.UIFieldType;
 import org.homio.api.ui.field.action.UIContextMenuAction;
 import org.homio.api.ui.field.color.UIFieldColorRef;
@@ -53,7 +54,7 @@ public final class TuyaProjectEntity extends MicroControllerBaseEntity
     @UIField(order = 9999, disableEdit = true, hideInEdit = true)
     @UIFieldInlineEntities(bg = "#27FF000D")
     public List<TuyaDeviceInlineEntity> getCoordinatorDevices() {
-        return getEntityContext().findAll(TuyaDeviceEntity.class)
+        return context().db().findAll(TuyaDeviceEntity.class)
                                  .stream()
                                  .sorted()
                                  .map(TuyaDeviceInlineEntity::new)
@@ -65,7 +66,7 @@ public final class TuyaProjectEntity extends MicroControllerBaseEntity
         boolean reloadItem = !getStatus().equals(status) || (status == Status.ERROR && !Objects.equals(getStatusMessage(), msg));
         super.setStatus(status, msg);
         if (reloadItem) {
-            getEntityContext().ui().updateItem(this);
+            context().ui().updateItem(this);
         }
     }
 
@@ -157,8 +158,8 @@ public final class TuyaProjectEntity extends MicroControllerBaseEntity
     }
 
     @Override
-    public @NotNull TuyaProjectService createService(@NotNull EntityContext entityContext) {
-        return new TuyaProjectService(entityContext, this);
+    public @NotNull TuyaProjectService createService(@NotNull Context context) {
+        return new TuyaProjectService(context, this);
     }
 
     @Override
@@ -199,24 +200,24 @@ public final class TuyaProjectEntity extends MicroControllerBaseEntity
     }
 
     @UIContextMenuAction(value = "TUYA.SCAN_DEVICES", icon = "fas fa-barcode", iconColor = Color.PRIMARY_COLOR)
-    public ActionResponseModel scanDevices(EntityContext entityContext) {
-        entityContext.bgp().runWithProgress("tuya-scan-devices").execute(progressBar -> {
-            entityContext.getBean(TuyaDiscoveryService.class)
-                    .scan(entityContext, progressBar, null);
+    public ActionResponseModel scanDevices(Context context) {
+        context.bgp().runWithProgress("tuya-scan-devices").execute(progressBar -> {
+            context.getBean(TuyaDiscoveryService.class)
+                   .scan(context, progressBar, null);
         });
         return ActionResponseModel.fired();
     }
 
     @UIContextMenuAction(value = "TUYA.GET_DEVICE_LIST", icon = "fas fa-tape")
-    public ActionResponseModel getDevicesList(EntityContext entityContext) {
+    public ActionResponseModel getDevicesList(Context context) {
         return ActionResponseModel.showJson("Tuya device list",
-            entityContext.getBean(TuyaDiscoveryService.class).getDeviceList(entityContext));
+            context.getBean(TuyaDiscoveryService.class).getDeviceList(context));
     }
 
     @UIContextMenuAction(value = "TUYA.GET_USER_INFO", icon = "fas fa-tape")
-    public ActionResponseModel getUserInfo(EntityContext entityContext) {
+    public ActionResponseModel getUserInfo(Context context) {
         return ActionResponseModel.showJson("Tuya device list",
-            entityContext.getBean(TuyaOpenAPI.class).getUserInfo());
+            context.getBean(TuyaOpenAPI.class).getUserInfo());
     }
 
     @Override
@@ -238,7 +239,7 @@ public final class TuyaProjectEntity extends MicroControllerBaseEntity
         @UIField(order = 1)
         @UIFieldInlineEntityWidth(35)
         @UIFieldLinkToEntity(TuyaDeviceEntity.class)
-        private String ieeeAddress;
+        private NavEntityTitle ieeeAddress;
 
         @UIField(order = 2)
         @UIFieldColorRef("color")
@@ -256,7 +257,7 @@ public final class TuyaProjectEntity extends MicroControllerBaseEntity
             if (StringUtils.isEmpty(name) || name.equalsIgnoreCase(entity.getIeeeAddress())) {
                 name = entity.getDescription();
             }
-            ieeeAddress = entity.getEntityID() + "~~~" + entity.getIeeeAddress();
+            ieeeAddress = new NavEntityTitle(entity.getEntityID(), entity.getIeeeAddress());
             endpointsCount = entity.getService().getEndpoints().size();
         }
     }

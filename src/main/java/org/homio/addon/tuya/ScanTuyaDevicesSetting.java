@@ -1,6 +1,6 @@
 package org.homio.addon.tuya;
 
-import org.homio.api.EntityContext;
+import org.homio.api.Context;
 import org.homio.api.entity.BaseEntity;
 import org.homio.api.model.Icon;
 import org.homio.api.setting.SettingPluginButton;
@@ -24,7 +24,7 @@ public class ScanTuyaDevicesSetting implements SettingPluginButton {
     }
 
     @Override
-    public boolean isVisible(EntityContext entityContext) {
+    public boolean isVisible(Context context) {
         return false;
     }
 
