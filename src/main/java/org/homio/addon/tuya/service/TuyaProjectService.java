@@ -11,9 +11,9 @@ import org.homio.addon.tuya.TuyaProjectEntity;
 import org.homio.addon.tuya.internal.cloud.TuyaOpenAPI;
 import org.homio.api.Context;
 import org.homio.api.model.Icon;
-import org.homio.api.model.Status;
 import org.homio.api.service.EntityService.ServiceInstance;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 @Getter
 public class TuyaProjectService extends ServiceInstance<TuyaProjectEntity> {
@@ -28,7 +28,6 @@ public class TuyaProjectService extends ServiceInstance<TuyaProjectEntity> {
 
     public void initialize() {
         TuyaOpenAPI.setProjectEntity(entity);
-        entity.setStatus(Status.INITIALIZE);
         try {
             testService();
             entity.setStatusOnline();
@@ -36,13 +35,10 @@ public class TuyaProjectService extends ServiceInstance<TuyaProjectEntity> {
             context.getBean(TuyaDiscoveryService.class).scan(context, null, null);
         } catch (TuyaOpenAPI.TuyaApiNotReadyException te) {
             scheduleInitialize();
-        } catch (Exception ex) {
-            entity.setStatusError(ex);
-        } finally {
-            updateNotificationBlock();
         }
     }
 
+    @Override
     public void updateNotificationBlock() {
         context.ui().notification().addBlock(entityID, "Tuya", new Icon(TUYA_ICON, TUYA_COLOR), builder -> {
             builder.setStatus(entity.getStatus()).linkToEntity(entity);
@@ -53,16 +49,13 @@ public class TuyaProjectService extends ServiceInstance<TuyaProjectEntity> {
     @Override
     @SneakyThrows
     protected void testService() {
-        if (!entity.isValid()) {
-            throw new IllegalStateException("Not valid configuration");
-        }
         if (!api.isConnected()) {
             api.login();
         }
     }
 
     @Override
-    public void destroy() {
+    public void destroy(boolean forRestart, @Nullable Exception ex) {
         updateNotificationBlock();
     }
 

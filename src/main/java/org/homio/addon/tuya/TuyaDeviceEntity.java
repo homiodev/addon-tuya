@@ -20,6 +20,7 @@ import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.Setter;
@@ -43,6 +44,7 @@ import org.homio.api.ui.UISidebarMenu;
 import org.homio.api.ui.UISidebarMenu.TopSidebarMenu;
 import org.homio.api.ui.field.UIField;
 import org.homio.api.ui.field.UIFieldGroup;
+import org.homio.api.ui.field.UIFieldReadDefaultValue;
 import org.homio.api.ui.field.UIFieldSlider;
 import org.homio.api.ui.field.UIFieldType;
 import org.homio.api.ui.field.action.UIContextMenuAction;
@@ -73,7 +75,7 @@ import org.jetbrains.annotations.Nullable;
 public final class TuyaDeviceEntity extends DeviceBaseEntity
     implements
     DeviceEndpointsBehaviourContract,
-    EntityService<TuyaDeviceService, TuyaDeviceEntity>, HasEntityLog {
+    EntityService<TuyaDeviceService>, HasEntityLog {
 
     public static final String PREFIX = "tuya";
     private static final Map<String, Map<String, SchemaDp>> SCHEMAS = readSchemaFromFile();
@@ -139,7 +141,8 @@ public final class TuyaDeviceEntity extends DeviceBaseEntity
         return this;
     }
 
-    @UIField(order = 1, isRevert = true)
+    @UIField(order = 1)
+    @UIFieldReadDefaultValue
     @UIFieldShowOnCondition("return !context.get('compactMode')")
     @UIFieldGroup(value = "CONNECTION", order = 5, borderColor = "#3880B0")
     public ProtocolVersion getProtocolVersion() {
@@ -150,7 +153,8 @@ public final class TuyaDeviceEntity extends DeviceBaseEntity
         setJsonData("pv", value);
     }
 
-    @UIField(order = 2, isRevert = true)
+    @UIField(order = 2)
+    @UIFieldReadDefaultValue
     @UIFieldShowOnCondition("return !context.get('compactMode')")
     @UIFieldGroup("CONNECTION")
     @UIFieldSlider(min = 10, max = 300, header = "s")
@@ -158,7 +162,12 @@ public final class TuyaDeviceEntity extends DeviceBaseEntity
         return getJsonData("pi", 30);
     }
 
-    @UIField(order = 3, isRevert = true)
+    public void setPollingInterval(int value) {
+        setJsonData("pi", value);
+    }
+
+    @UIField(order = 3)
+    @UIFieldReadDefaultValue
     @UIFieldShowOnCondition("return !context.get('compactMode')")
     @UIFieldGroup("CONNECTION")
     @UIFieldSlider(min = 10, max = 300, header = "s")
@@ -168,10 +177,6 @@ public final class TuyaDeviceEntity extends DeviceBaseEntity
 
     public void setReconnectInterval(int value) {
         setJsonData("ri", value);
-    }
-
-    public void setPollingInterval(int value) {
-        setJsonData("pi", value);
     }
 
     @UIField(order = 1, hideOnEmpty = true)
@@ -256,13 +261,8 @@ public final class TuyaDeviceEntity extends DeviceBaseEntity
     }
 
     @Override
-    public @Nullable String getModel() {
+    public @NotNull String getModel() {
         return getJsonData("model");
-    }
-
-    @Override
-    public @NotNull ConfigDeviceDefinitionService getConfigDeviceDefinitionService() {
-        return TuyaDeviceService.CONFIG_DEVICE_SERVICE;
     }
 
     @Override
@@ -324,6 +324,11 @@ public final class TuyaDeviceEntity extends DeviceBaseEntity
             }
         }
         return schema;
+    }
+
+    @Override
+    public @Nullable Set<String> getConfigurationErrors() {
+        return null;
     }
 
     @Override

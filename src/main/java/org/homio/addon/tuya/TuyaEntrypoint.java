@@ -59,10 +59,8 @@ public class TuyaEntrypoint implements AddonEntrypoint {
 
     @Override
     public void destroy() {
-        log.warn("Destroy tuya entrypoint");
         udpDiscoveryListener.deactivate();
         eventLoopGroup.shutdownGracefully();
-        // keep tuya project and all devices in db in case of recovery
     }
 
     public @NotNull TuyaProjectEntity ensureEntityExists(Context context) {

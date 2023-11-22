@@ -5,8 +5,10 @@ import static org.homio.api.ContextSetting.setMemValue;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Entity;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -48,7 +50,7 @@ import org.jetbrains.annotations.Nullable;
 @Accessors(chain = true)
 @UISidebarChildren(icon = "fas fa-diagram-project", color = "#0088CC", allowCreateItem = false)
 public final class TuyaProjectEntity extends MicroControllerBaseEntity
-    implements EntityService<TuyaProjectService, TuyaProjectEntity>,
+    implements EntityService<TuyaProjectService>,
     HasStatusAndMsg, HasEntityLog {
 
     @UIField(order = 9999, disableEdit = true, hideInEdit = true)
@@ -167,12 +169,22 @@ public final class TuyaProjectEntity extends MicroControllerBaseEntity
         entityLogBuilder.addTopicFilterByEntityID("org.homio");
     }
 
-    public boolean isValid() {
-        return !getAppUID().isEmpty()
-                && !getAccessID().isEmpty()
-                && !getAccessSecret().asString().isEmpty()
-                && getCountryCode() != null
-                && getCountryCode() != 0;
+    @Override
+    public @NotNull Set<String> getConfigurationErrors() {
+        Set<String> errors = new HashSet<>();
+        if (getAppUID().isEmpty()) {
+            errors.add("ERROR.NO_APP_UID");
+        }
+        if (getAccessID().isEmpty()) {
+            errors.add("ERROR.NO_ACCESS_ID");
+        }
+        if (getAccessSecret().isEmpty()) {
+            errors.add("ERROR.NO_ACCESS_SECRET");
+        }
+        if (getCountryCode() == null || getCountryCode() == 0) {
+            errors.add("ERROR.NO_COUNTRY_CODE");
+        }
+        return errors;
     }
 
     @Override
