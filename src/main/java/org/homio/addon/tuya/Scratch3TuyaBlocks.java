@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class Scratch3TuyaBlocks extends Scratch3BaseDeviceBlocks {
 
-    public Scratch3TuyaBlocks(Context context, TuyaEntrypoint tuyaEntrypoint) {
-        super("#BF2A63", context, tuyaEntrypoint, TuyaDeviceEntity.PREFIX);
-    }
+  public Scratch3TuyaBlocks(Context context, TuyaEntrypoint tuyaEntrypoint) {
+    super("#BF2A63", context, tuyaEntrypoint, TuyaDeviceEntity.PREFIX);
+  }
 }

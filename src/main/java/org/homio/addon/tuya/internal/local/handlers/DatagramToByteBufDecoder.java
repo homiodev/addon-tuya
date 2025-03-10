@@ -12,8 +12,8 @@ import java.util.List;
  */
 public class DatagramToByteBufDecoder extends MessageToMessageDecoder<DatagramPacket> {
 
-    @Override
-    protected void decode(@Nullable ChannelHandlerContext ctx, DatagramPacket msg, List<Object> out) {
-        out.add(msg.content().copy());
-    }
+  @Override
+  protected void decode(@Nullable ChannelHandlerContext ctx, DatagramPacket msg, List<Object> out) {
+    out.add(msg.content().copy());
+  }
 }

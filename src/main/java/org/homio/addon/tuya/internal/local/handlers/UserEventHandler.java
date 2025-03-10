@@ -15,32 +15,32 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class UserEventHandler extends ChannelDuplexHandler {
 
-    private final String deviceId;
-    private final String entityID;
+  private final String deviceId;
+  private final String entityID;
 
-    @Override
-    public void userEventTriggered(ChannelHandlerContext ctx, Object evt) {
-        if (evt instanceof DisposeEvent) {
-            log.debug("[{}]: {}{}: Received DisposeEvent, closing channel", entityID, deviceId,
-                Objects.requireNonNullElse(ctx.channel().remoteAddress(), ""));
-            ctx.close();
-        }
+  @Override
+  public void userEventTriggered(ChannelHandlerContext ctx, Object evt) {
+    if (evt instanceof DisposeEvent) {
+      log.debug("[{}]: {}{}: Received DisposeEvent, closing channel", entityID, deviceId,
+        Objects.requireNonNullElse(ctx.channel().remoteAddress(), ""));
+      ctx.close();
     }
+  }
 
-    @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause)
-            throws Exception {
-        if (cause instanceof IOException) {
-            log.debug("[{}]: {}{}: IOException caught, closing channel.", entityID, deviceId,
-                Objects.requireNonNullElse(ctx.channel().remoteAddress(), ""), cause);
-            log.debug("[{}]: IOException caught: ", entityID, cause);
-        } else {
-            log.warn("[{}]: {}{}: {} caught, closing the channel", entityID, deviceId,
-                Objects.requireNonNullElse(ctx.channel().remoteAddress(), ""), cause.getClass(), cause);
-        }
-        ctx.close();
+  @Override
+  public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause)
+    throws Exception {
+    if (cause instanceof IOException) {
+      log.debug("[{}]: {}{}: IOException caught, closing channel.", entityID, deviceId,
+        Objects.requireNonNullElse(ctx.channel().remoteAddress(), ""), cause);
+      log.debug("[{}]: IOException caught: ", entityID, cause);
+    } else {
+      log.warn("[{}]: {}{}: {} caught, closing the channel", entityID, deviceId,
+        Objects.requireNonNullElse(ctx.channel().remoteAddress(), ""), cause.getClass(), cause);
     }
+    ctx.close();
+  }
 
-    public static class DisposeEvent {
-    }
+  public static class DisposeEvent {
+  }
 }

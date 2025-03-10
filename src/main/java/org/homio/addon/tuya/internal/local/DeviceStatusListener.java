@@ -9,9 +9,9 @@ import java.util.Map;
  * Encapsulates device status data
  */
 public interface DeviceStatusListener {
-    void processDeviceStatus(@Nullable String cid, @NotNull Map<Integer, Object> deviceStatus);
+  void processDeviceStatus(@Nullable String cid, @NotNull Map<Integer, Object> deviceStatus);
 
-    void onDisconnected(@NotNull String message);
+  void onDisconnected(@NotNull String message);
 
-    void onConnected();
+  void onConnected();
 }

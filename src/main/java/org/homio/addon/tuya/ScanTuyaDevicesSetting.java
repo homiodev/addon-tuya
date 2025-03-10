@@ -8,28 +8,28 @@ import org.jetbrains.annotations.NotNull;
 
 public class ScanTuyaDevicesSetting implements SettingPluginButton {
 
-    @Override
-    public int order() {
-        return 0;
-    }
+  @Override
+  public int order() {
+    return 0;
+  }
 
-    @Override
-    public @NotNull Icon getIcon() {
-        return new Icon("fas fa-qrcode", "#ED3E58");
-    }
+  @Override
+  public @NotNull Icon getIcon() {
+    return new Icon("fas fa-qrcode", "#ED3E58");
+  }
 
-    @Override
-    public String getConfirmMsg() {
-        return "TUYA.SCAN_DEVICES";
-    }
+  @Override
+  public String getConfirmMsg() {
+    return "TUYA.SCAN_DEVICES";
+  }
 
-    @Override
-    public boolean isVisible(Context context) {
-        return false;
-    }
+  @Override
+  public boolean isVisible(Context context) {
+    return false;
+  }
 
-    @Override
-    public Class<? extends BaseEntity> availableForEntity() {
-        return TuyaDeviceEntity.class;
-    }
+  @Override
+  public Class<? extends BaseEntity> availableForEntity() {
+    return TuyaDeviceEntity.class;
+  }
 }

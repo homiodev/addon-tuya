@@ -7,7 +7,7 @@ import lombok.ToString;
  */
 @ToString
 public class StatusInfo {
-    public String code = "";
-    public String value = "";
-    public String t = "";
+  public String code = "";
+  public String value = "";
+  public String t = "";
 }

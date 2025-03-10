@@ -11,30 +11,32 @@ import org.homio.addon.tuya.internal.local.dto.DiscoveryMessage;
 import java.util.Map;
 import java.util.Objects;
 
-import static org.homio.addon.tuya.internal.local.CommandType.*;
+import static org.homio.addon.tuya.internal.local.CommandType.BROADCAST_LPV34;
+import static org.homio.addon.tuya.internal.local.CommandType.UDP;
+import static org.homio.addon.tuya.internal.local.CommandType.UDP_NEW;
 
 /**
  * Handling UDP discovery messages
  */
 @RequiredArgsConstructor
 public class DiscoveryMessageHandler extends ChannelDuplexHandler {
-    private final Map<String, DeviceInfo> deviceInfos;
-    private final Map<String, DeviceInfoSubscriber> deviceListeners;
+  private final Map<String, DeviceInfo> deviceInfos;
+  private final Map<String, DeviceInfoSubscriber> deviceListeners;
 
-    @Override
-    public void channelRead(ChannelHandlerContext ctx, Object msg) {
-        if (msg instanceof MessageWrapper<?> mw) {
-            if ((mw.commandType() == UDP_NEW || mw.commandType() == UDP || mw.commandType() == BROADCAST_LPV34)) {
-                DiscoveryMessage discoveryMessage = (DiscoveryMessage) Objects.requireNonNull(mw.content());
-                DeviceInfo deviceInfo = new DeviceInfo(discoveryMessage.ip, discoveryMessage.version);
-                if (!deviceInfo.equals(deviceInfos.put(discoveryMessage.deviceId, deviceInfo))) {
-                    DeviceInfoSubscriber subscriber = deviceListeners.get(discoveryMessage.deviceId);
+  @Override
+  public void channelRead(ChannelHandlerContext ctx, Object msg) {
+    if (msg instanceof MessageWrapper<?> mw) {
+      if ((mw.commandType() == UDP_NEW || mw.commandType() == UDP || mw.commandType() == BROADCAST_LPV34)) {
+        DiscoveryMessage discoveryMessage = (DiscoveryMessage) Objects.requireNonNull(mw.content());
+        DeviceInfo deviceInfo = new DeviceInfo(discoveryMessage.ip, discoveryMessage.version);
+        if (!deviceInfo.equals(deviceInfos.put(discoveryMessage.deviceId, deviceInfo))) {
+          DeviceInfoSubscriber subscriber = deviceListeners.get(discoveryMessage.deviceId);
 
-                    if (subscriber != null) {
-                        subscriber.deviceInfoChanged(deviceInfo);
-                    }
-                }
-            }
+          if (subscriber != null) {
+            subscriber.deviceInfoChanged(deviceInfo);
+          }
         }
+      }
     }
+  }
 }
