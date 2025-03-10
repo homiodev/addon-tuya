@@ -6,18 +6,20 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.homio.addon.tuya.internal.cloud.TuyaOpenAPI;
 import org.homio.addon.tuya.internal.local.UdpDiscoveryListener;
+import org.homio.api.AddonConfiguration;
 import org.homio.api.AddonEntrypoint;
 import org.homio.api.Context;
 import org.homio.hquery.hardware.network.NetworkHardwareRepository;
 import org.jetbrains.annotations.NotNull;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 
 import static org.homio.api.util.Constants.PRIMARY_DEVICE;
 
 @Log4j2
-@Service
+@Component
+@AddonConfiguration
 @RequiredArgsConstructor
 public class TuyaEntrypoint implements AddonEntrypoint {
 
