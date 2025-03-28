@@ -70,4 +70,4 @@ jobs:
           GPG_TTY: /dev/tty
 
       - name: Build & Sign with Maven
-        run: mvn clean deploy -Dgpg.passphrase=${{ secrets.GPG_PASSPHRASE }}
+        run: mvn clean install -Dgpg.passphrase=${{ secrets.GPG_PASSPHRASE }}
