@@ -144,7 +144,7 @@ public class TuyaDeviceEndpoint extends BaseDeviceEndpoint<TuyaDeviceEntity> {
         return device.getService().send(Map.of(dp2, value.boolValue()));
       }).setDisabled(!device.getStatus().isOnline());
     }
-    uiInputBuilder.addColorPicker(getEntityID(), value.stringValue(), (context, params) -> {
+    uiInputBuilder.addColorPicker(getEntityID(), value.stringValue()).setActionHandler((context, params) -> {
       Map<Integer, Object> commandRequest = new HashMap<>();
       setValue(new StringType(params.getString("value")), false);
       commandRequest.put(dp, hexColorEncode(value.stringValue()));
